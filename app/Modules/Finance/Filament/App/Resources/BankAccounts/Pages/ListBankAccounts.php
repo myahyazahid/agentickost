@@ -1,0 +1,19 @@
+<?php
+
+namespace App\Modules\Finance\Filament\App\Resources\BankAccounts\Pages;
+
+use App\Modules\Finance\Filament\App\Resources\BankAccounts\BankAccountResource;
+use Filament\Actions\CreateAction;
+use Filament\Resources\Pages\ListRecords;
+
+class ListBankAccounts extends ListRecords
+{
+    protected static string $resource = BankAccountResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CreateAction::make()->label('Tambah rekening'),
+        ];
+    }
+}

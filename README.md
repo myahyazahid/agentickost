@@ -29,10 +29,19 @@ CREATE DATABASE agentickost_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicod
 ```
 
 ```sh
-php artisan migrate
+php artisan migrate --seed
 npm install
 npm run build
 ```
+
+Seeder membuat akun demo (password semua `password`):
+
+| Akun | Panel |
+|---|---|
+| `admin@example.com` | `/admin` (super admin) |
+| `owner@example.com` | `/app` (owner tenant "Kost Demo") |
+
+Tenant baru beserta owner-nya dibuat dengan `php artisan tenant:create`.
 
 ### Object storage lokal
 
@@ -60,9 +69,9 @@ composer run dev
 |---|---|
 | `/app` | Panel owner dan staf |
 | `/admin` | Panel super admin |
-| `/horizon` | Dashboard antrian |
+| `/horizon` | Dashboard antrian; di luar `local` hanya untuk super admin yang login di `/admin` |
 
-Buat user login dengan `php artisan make:filament-user`. Pembatasan akses per panel (owner/staf vs super admin) dibangun di M0.3; sampai saat itu Filament mengizinkan semua user di environment `local` dan menolak semua user di environment lain.
+Keputusan arsitektur (modul, isolasi tenant, pola Action, peran, audit log) ada di [`docs/adr/`](docs/adr/).
 
 Horizon butuh ekstensi `pcntl`, yang tidak ada di PHP Windows. Di Windows, proses antrian dengan `php artisan queue:work`; di macOS/Linux pakai `php artisan horizon`.
 

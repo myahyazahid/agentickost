@@ -17,7 +17,7 @@ flowchart LR
 - Workflow ada di [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). Pint, Larastan, dan test berjalan di setiap push dan pull request.
 - Job `deploy-staging` hanya berjalan untuk push ke `main`, setelah ketiga job lain lulus.
 - Selama variabel repository `STAGING_HOST` belum diisi, job deploy berstatus *skipped*, bukan gagal. CI tetap hijau sebelum server siap.
-- [`deploy/deploy.sh`](../deploy/deploy.sh) menjalankan: `git reset` ke commit yang lulus CI, `composer install --no-dev`, `npm run build`, `migrate --force`, cache config/route/view/Filament, lalu `horizon:terminate` agar Supervisor menyalakan ulang worker dengan kode baru.
+- [`deploy/deploy.sh`](../deploy/deploy.sh) menjalankan: `git reset` ke commit yang lulus CI, `composer install --no-dev`, `npm run build`, `migrate --force`, `access:sync-roles` (permission baru ikut ke semua tenant), cache config/route/view/Filament, lalu `horizon:terminate` agar Supervisor menyalakan ulang worker dengan kode baru.
 
 Deploy dilakukan di tempat (tanpa rilis bersimbol link). Cukup untuk staging; untuk produksi pertimbangkan rilis zero-downtime.
 
@@ -75,7 +75,7 @@ Contoh memakai user `deploy` dan direktori `/var/www/agentickost`.
    AWS_ENDPOINT=<endpoint S3-compatible>
    AWS_USE_PATH_STYLE_ENDPOINT=true
 
-   HORIZON_ALLOWED_EMAILS=<email tim ops, pisahkan dengan koma>
+   IDENTITY_HASH_KEY=<hasil: php -r "echo base64_encode(random_bytes(32)), PHP_EOL;">
 
    SENTRY_LARAVEL_DSN=<DSN dari project Sentry>
    SENTRY_ENVIRONMENT=staging
@@ -88,7 +88,10 @@ Contoh memakai user `deploy` dan direktori `/var/www/agentickost`.
    cd /var/www/agentickost
    php artisan key:generate
    bash deploy/deploy.sh origin/main
+   php artisan make:filament-user --panel=admin
    ```
+
+   Perintah terakhir membuat akun super admin untuk panel `/admin`. Akun yang sama dipakai untuk membuka `/horizon`.
 
 5. **Nginx.** Contoh site config (`/etc/nginx/sites-available/agentickost`), sesuaikan domain dan versi PHP-FPM, lalu pasang TLS dengan Certbot:
 

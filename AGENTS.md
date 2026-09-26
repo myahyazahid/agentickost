@@ -6,6 +6,7 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 - `docs/schema.md`: skema database dan konvensinya (ULID, uang, waktu, indeks).
 - `docs/roadmap (1).md`: urutan milestone. Centang tugas yang selesai dan commit bersama kodenya. Fitur di luar roadmap dicatat di bagian Parkir, tidak langsung dikerjakan.
 - `docs/deployment.md`: CI dan deploy staging.
+- `docs/adr/`: keputusan arsitektur (modul, isolasi tenant, Action, peran, audit log, state machine, uang). Ikuti pola di sana.
 
 ## Aturan inti dari PRD
 
@@ -18,8 +19,20 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 
 ## Struktur
 
-- Panel Filament `app` di `/app` untuk owner dan staf (`app/Filament/App`), panel `admin` di `/admin` untuk super admin (`app/Filament/Admin`).
-- Modul domain akan berada di `app/Modules/` (dibangun di M0.3).
+- Modul domain di `app/Modules/{Nama}/` dengan `{Nama}ServiceProvider` (terdaftar otomatis). Isi umum: `Actions/`, `Models/`, `Enums/`, `Policies/`, `Database/Migrations/`, `Database/Factories/`, `Filament/App|Admin/`. Kode lintas modul tanpa domain di `app/Support/`.
+- Modul saat ini: `Tenancy` (tenant, konteks tenant, super admin), `Access` (user, peran, audit log), `Documents` (lampiran, penomoran dokumen), `Property` (properti, kamar, harga, pengaturan), `Lease` (penghuni, pembayar, kontrak), `Billing` (tagihan, denda, nota kredit, tarif utilitas, meteran), `Finance` (akun, rekening tujuan).
+- Modul boleh membaca model modul lain, tetapi menulis lewat Action modul pemiliknya. Contoh: Billing memajukan kursor tagihan kontrak lewat `Lease\Support\BillingCursor`.
+- Panel Filament `app` di `/app` untuk owner dan staf (guard `web`), panel `admin` di `/admin` untuk super admin (guard `platform`, model `PlatformAdmin`).
+
+## Pola wajib
+
+- Model data tenant memakai `BelongsToTenant` dan `Auditable`, punya factory, dan alias morph di provider modulnya. `tests/Feature/TenantIsolationTest.php` otomatis menguji model baru dan gagal bila salah satu syarat ini terlewat.
+- Operasi bisnis adalah Action `final` di `Actions/` yang meng-extend `App\Support\Actions\Action`: `authorize()` → `validate()` → `transaction()`.
+- Permission baru ditambahkan sebagai case di enum permission modul (`DefinesPermissions`), lalu `php artisan access:sync-roles`.
+- Command dan job terjadwal yang memanggil Action dibungkus `ActorContext::actingAs(Actor::system(), ...)`, dan untuk data tenant `TenantContext::each()` atau `run()`. Callback yang mengubah variabel di luarnya (misal penghitung) ditulis sebagai `function () use (&$count)`, bukan arrow function: arrow function menyalin nilainya sehingga perubahan hilang.
+- Tanggal bisnis (jatuh tempo, periode, telat) dibandingkan dengan `Property::today()`, bukan `now()`, supaya mengikuti zona waktu properti.
+- Nominal uang memakai cast `RupiahCast` dan ditampilkan dengan `Rupiah::format()`.
+- Status domain memakai `spatie/laravel-model-states` + `EnforcesStateTransitions`.
 
 ## Lingkungan lokal
 
@@ -27,6 +40,8 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 - Redis untuk queue dan cache. Horizon butuh `pcntl`, jadi di Windows jalankan `php artisan queue:work`.
 - `composer.json` mendeklarasikan `ext-pcntl` dan `ext-posix` di `config.platform` agar `composer install` berhasil di Windows. Jangan dihapus.
 - Disk `s3` mengarah ke SeaweedFS lokal di `http://127.0.0.1:8333` (lihat README).
+- `php artisan migrate:fresh --seed` membuat super admin `admin@example.com`, tenant "Kost Demo" dengan owner `owner@example.com`, dan satu properti. Password semua akun: `password`.
+- Tenant baru: `php artisan tenant:create`. Jangan pakai `make:filament-user` untuk panel `app` karena user wajib punya tenant.
 
 ## Sebelum menyatakan selesai
 

@@ -59,7 +59,7 @@ Fase 2 dan Fase 3 dapat berjalan paralel jika tim lebih dari satu orang.
 - [ ] Rangkum temuan: masalah paling sakit, cara kerja sekarang, kesediaan membayar
 - [ ] Putuskan segmen target awal (PRD §18 no. 1)
 - [ ] Tetapkan nilai default aturan bisnis: masa tenggang, tipe denda, urutan alokasi (PRD §18 no. 7)
-- [ ] Putuskan dukungan kost harian/mingguan di MVP atau tidak (PRD §18 no. 6)
+- [x] Putuskan dukungan kost harian/mingguan di MVP atau tidak (PRD §18 no. 6): didukung penuh, lihat `docs/adr/0008-keputusan-mvp.md`
 - [ ] Dapatkan 2–3 calon kost pilot yang bersedia mencoba
 - [ ] Perbarui PRD sesuai temuan
 
@@ -72,29 +72,29 @@ Fase 2 dan Fase 3 dapat berjalan paralel jika tim lebih dari satu orang.
 - [x] Install Filament; buat dua panel: `admin` (super admin) dan `app` (owner & staf)
 - [x] Setup testing (Pest atau PHPUnit) dengan database test terpisah
 - [x] Setup code style (Laravel Pint) dan static analysis (Larastan)
-- [x] Setup CI (GitHub Actions): test, Pint, Larastan di setiap push dan pull request — belum pernah berjalan karena repo belum punya remote GitHub
-- [ ] Konfigurasi object storage S3-compatible untuk lingkungan lokal dan staging — lokal selesai (SeaweedFS); staging menunggu pilihan penyedia, lihat `docs/deployment.md`
-- [x] Setup error tracking — Sentry terpasang; DSN diisi saat project Sentry dibuat
-- [ ] Siapkan server staging dan alur deploy otomatis dari branch utama — alur deploy siap (`deploy/deploy.sh`, job `deploy-staging`); server belum ada
+- [x] Setup CI (GitHub Actions): test, Pint, Larastan di setiap push dan pull request: belum pernah berjalan karena repo belum punya remote GitHub
+- [ ] Konfigurasi object storage S3-compatible untuk lingkungan lokal dan staging: lokal selesai (SeaweedFS); staging menunggu pilihan penyedia, lihat `docs/deployment.md`
+- [x] Setup error tracking: Sentry terpasang; DSN diisi saat project Sentry dibuat
+- [ ] Siapkan server staging dan alur deploy otomatis dari branch utama: alur deploy siap (`deploy/deploy.sh`, job `deploy-staging`); server belum ada
 - [x] Atur zona waktu aplikasi ke UTC (NFR-LOC-02)
 
 **Kriteria selesai:** `git push` menjalankan CI hijau dan men-deploy ke staging secara otomatis.
 
 ### M0.3 Fondasi arsitektur
 
-- [ ] Buat struktur `app/Modules/` beserta mekanisme registrasi service provider per modul (PRD §12.4)
-- [ ] Tetapkan pola Action class: satu kelas satu operasi, dibungkus transaksi database, memeriksa permission
-- [ ] Model `Tenant` dan relasi user ke tenant
-- [ ] Trait `BelongsToTenant`: isi `tenant_id` otomatis dan pasang global scope (NFR-ISO-01)
-- [ ] Middleware penentu konteks tenant dari user login
-- [ ] Mekanisme membawa konteks tenant ke job antrian dan perintah terjadwal (NFR-ISO-02)
-- [ ] Awalan tenant pada kunci cache dan path storage (NFR-ISO-03, NFR-ISO-04)
-- [ ] **Harness test isolasi tenant** yang otomatis dijalankan untuk setiap model baru (NFR-ISO-05)
-- [ ] Role dan permission dasar (Owner, Manajer, Penjaga, Akuntan, Penghuni) dengan pembatasan per properti
-- [ ] Audit log dengan tipe aktor: user, sistem, agent, super admin (FR-USR-04)
-- [ ] Konvensi uang: cast integer rupiah dan helper format (PRD §8.1)
-- [ ] Pasang dan uji library state machine
-- [ ] Tulis catatan keputusan arsitektur singkat di `docs/adr/`
+- [x] Buat struktur `app/Modules/` beserta mekanisme registrasi service provider per modul (PRD §12.4)
+- [x] Tetapkan pola Action class: satu kelas satu operasi, dibungkus transaksi database, memeriksa permission
+- [x] Model `Tenant` dan relasi user ke tenant
+- [x] Trait `BelongsToTenant`: isi `tenant_id` otomatis dan pasang global scope (NFR-ISO-01)
+- [x] Middleware penentu konteks tenant dari user login
+- [x] Mekanisme membawa konteks tenant ke job antrian dan perintah terjadwal (NFR-ISO-02)
+- [x] Awalan tenant pada kunci cache dan path storage (NFR-ISO-03, NFR-ISO-04)
+- [x] **Harness test isolasi tenant** yang otomatis dijalankan untuk setiap model baru (NFR-ISO-05): lapisan model; uji lewat UI/API ditambah saat resource pertama dibuat
+- [x] Role dan permission dasar (Owner, Manajer, Penjaga, Akuntan, Penghuni) dengan pembatasan per properti: peran Penghuni baru dipakai di portal penghuni (M1.5.3)
+- [x] Audit log dengan tipe aktor: user, sistem, agent, super admin (FR-USR-04)
+- [x] Konvensi uang: cast integer rupiah dan helper format (PRD §8.1)
+- [x] Pasang dan uji library state machine: contoh di `tests/Fixtures`; state machine domain pertama (status kamar) di M1.1
+- [x] Tulis catatan keputusan arsitektur singkat di `docs/adr/`
 
 **Kriteria selesai:** test isolasi membuktikan user tenant A tidak dapat mengakses data tenant B pada model contoh; pola Action, audit log, dan state machine punya contoh yang berjalan dan teruji.
 
@@ -121,31 +121,31 @@ flowchart TD
 
 ### M1.1 Properti & Kamar — `PRP`, `KMR`
 
-- [ ] CRUD properti dengan zona waktu dan jenis kost (FR-PRP-01, FR-PRP-02)
-- [ ] Rekening tujuan per properti (FR-PRP-03)
-- [ ] Pengaturan properti: siklus tagihan, prorata, denda, alokasi, notice period, pembulatan (FR-PRP-04)
-- [ ] Tipe kamar dengan harga per periode sewa (FR-KMR-01)
-- [ ] CRUD kamar dengan kapasitas dan override harga (FR-KMR-02)
-- [ ] Riwayat harga dengan tanggal berlaku (FR-KMR-03)
-- [ ] State machine status kamar (FR-KMR-04, PRD §9.1)
-- [ ] Grid kamar per properti (FR-KMR-05)
-- [ ] Penugasan staf ke properti
+- [x] CRUD properti dengan zona waktu dan jenis kost (FR-PRP-01, FR-PRP-02): batas jumlah properti per paket menunggu modul langganan (M1.5.1)
+- [x] Rekening tujuan per properti (FR-PRP-03)
+- [x] Pengaturan properti: siklus tagihan, prorata, denda, alokasi, notice period, pembulatan (FR-PRP-04)
+- [x] Tipe kamar dengan harga per periode sewa (FR-KMR-01)
+- [x] CRUD kamar dengan kapasitas dan override harga (FR-KMR-02)
+- [x] Riwayat harga dengan tanggal berlaku (FR-KMR-03)
+- [x] State machine status kamar (FR-KMR-04, PRD §9.1)
+- [x] Grid kamar per properti (FR-KMR-05), lengkap dengan penghuni dan tunggakan
+- [x] Penugasan staf ke properti
 
 **Kriteria selesai:** owner dapat menyiapkan satu properti lengkap dengan kamar dan harga; transisi status kamar yang tidak sah ditolak dan teruji.
 
 ### M1.2 Penghuni & Kontrak — `PNH`, `KTR`
 
-- [ ] Profil penghuni dengan dokumen identitas terenkripsi (FR-PNH-01, FR-PNH-02, NFR-SEC-01)
-- [ ] Pembayar terpisah dari penghuni dan pengaturan penerima notifikasi (FR-PNH-03, FR-PNH-04)
-- [ ] Catatan internal per tenant (FR-PNH-06)
-- [ ] Kontrak dengan harga terkunci, periode bayar, dan deposit (FR-KTR-01)
-- [ ] Multi-penghuni per kamar dengan pembagian tagihan (FR-KTR-02)
-- [ ] State machine kontrak (PRD §9.3)
-- [ ] Perpanjangan kontrak dan pengingat kontrak berakhir (FR-KTR-03)
-- [ ] Pemutusan dini dengan penalti (FR-KTR-04)
-- [ ] Kebijakan hold saat libur panjang (FR-KTR-05)
-- [ ] PDF kontrak bermerek tenant (FR-KTR-06)
-- [ ] Log akses dokumen identitas (NFR-PDP-04)
+- [x] Profil penghuni dengan dokumen identitas terenkripsi (FR-PNH-01, FR-PNH-02, NFR-SEC-01)
+- [x] Pembayar terpisah dari penghuni dan pengaturan penerima notifikasi (FR-PNH-03, FR-PNH-04): pengiriman notifikasinya di M1.5.4
+- [x] Catatan internal per tenant (FR-PNH-06)
+- [x] Kontrak dengan harga terkunci, periode bayar, dan deposit (FR-KTR-01)
+- [x] Multi-penghuni per kamar dengan pembagian tagihan (FR-KTR-02): satu tagihan per kontrak, pembagian per orang hanya informasi (ADR 0008)
+- [x] State machine kontrak (PRD §9.3)
+- [x] Perpanjangan kontrak dan pengingat kontrak berakhir (FR-KTR-03)
+- [x] Pemutusan dini dengan penalti (FR-KTR-04): penalti ditagihkan di penyelesaian check-out (M1.6)
+- [x] Kebijakan hold saat libur panjang (FR-KTR-05): dipakai mesin tagihan di M1.3
+- [x] PDF kontrak bermerek tenant (FR-KTR-06)
+- [x] Log akses dokumen identitas (NFR-PDP-04)
 
 **Kriteria selesai:** kontrak dapat dibuat, diperpanjang, dan diputus; perubahan harga kamar tidak memengaruhi kontrak berjalan (teruji).
 
@@ -153,22 +153,22 @@ flowchart TD
 
 Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
-- [ ] Tulis test untuk seluruh aturan PRD §8.1–8.4 sebelum implementasi
-- [ ] Model tagihan dan komponen tagihan (FR-BIL-02)
-- [ ] Mode siklus anniversary dan tanggal tetap, termasuk kasus tanggal 29–31 (PRD §8.2)
-- [ ] Kalkulator prorata dengan basis hari aktual dan 30 hari (FR-BIL-03, PRD §8.3)
-- [ ] Job terbit tagihan harian per zona waktu properti (FR-BIL-01)
-- [ ] Pratinjau tagihan sebelum terbit massal
-- [ ] Mesin denda: masa tenggang, flat/harian/persen, batas maksimum (FR-BIL-04, PRD §8.4)
-- [ ] Penghapusan denda dengan alasan dan audit
-- [ ] Tagihan manual ad-hoc (FR-BIL-05)
-- [ ] Void dan credit note; larangan edit dan hapus (FR-BIL-06, PRD §8.10)
-- [ ] Penomoran tagihan per tenant (FR-BIL-07)
-- [ ] PDF tagihan dan tautan berbagi (FR-BIL-08)
-- [ ] Status "telat" dihitung, bukan disimpan (PRD §9.4)
-- [ ] Model utilitas: pascabayar, token, flat (FR-UTL-01)
-- [ ] Input meteran dengan foto dan validasi (FR-UTL-02, FR-UTL-03)
-- [ ] Pemakaian utilitas masuk ke tagihan (FR-UTL-04)
+- [x] Tulis test untuk seluruh aturan PRD §8.1–8.4 sebelum implementasi
+- [x] Model tagihan dan komponen tagihan (FR-BIL-02)
+- [x] Mode siklus anniversary dan tanggal tetap, termasuk kasus tanggal 29–31 (PRD §8.2)
+- [x] Kalkulator prorata dengan basis hari aktual dan 30 hari (FR-BIL-03, PRD §8.3)
+- [x] Job terbit tagihan harian per zona waktu properti (FR-BIL-01): berjalan tiap jam agar pergantian hari WIB, WITA, dan WIT tertangkap
+- [x] Pratinjau tagihan sebelum terbit massal
+- [x] Mesin denda: masa tenggang, flat/harian/persen, batas maksimum (FR-BIL-04, PRD §8.4)
+- [x] Penghapusan denda dengan alasan dan audit
+- [x] Tagihan manual ad-hoc (FR-BIL-05)
+- [x] Void dan credit note; larangan edit dan hapus (FR-BIL-06, PRD §8.10)
+- [x] Penomoran tagihan per tenant (FR-BIL-07)
+- [x] PDF tagihan dan tautan berbagi (FR-BIL-08)
+- [x] Status "telat" dihitung, bukan disimpan (PRD §9.4)
+- [x] Model utilitas: pascabayar, token, flat (FR-UTL-01)
+- [x] Input meteran dengan foto dan validasi (FR-UTL-02, FR-UTL-03)
+- [x] Pemakaian utilitas masuk ke tagihan (FR-UTL-04)
 
 **Kriteria selesai:** semua test aturan §8.1–8.4 lulus, termasuk contoh prorata Rp440.000 di PRD; tagihan satu bulan untuk satu properti terbit benar tanpa koreksi manual.
 

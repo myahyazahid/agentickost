@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Modules\Access\Http\Middleware\SetTenantContext;
+use App\Support\Modules\DiscoversModuleComponents;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,15 +21,23 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+/**
+ * Panel for tenant owners and staff.
+ */
 class AppPanelProvider extends PanelProvider
 {
+    use DiscoversModuleComponents;
+
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $panel = $panel
             ->default()
             ->id('app')
             ->path('app')
             ->login()
+            ->databaseNotifications()
+            // Daily work first, setup last.
+            ->navigationGroups(['Penghuni', 'Tagihan', 'Pembayaran', 'Maintenance', 'Keuangan', 'Properti'])
             ->colors([
                 'primary' => Color::Teal,
             ])
@@ -52,8 +62,12 @@ class AppPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            // Persistent so Livewire requests from the panel also get the tenant context.
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                SetTenantContext::class,
+            ], isPersistent: true);
+
+        return $this->discoverModuleComponents($panel, 'App');
     }
 }

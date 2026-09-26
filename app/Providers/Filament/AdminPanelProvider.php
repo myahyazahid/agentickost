@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Support\Modules\DiscoversModuleComponents;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,13 +20,20 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+/**
+ * Panel for KostPilot super admins, on the `platform` guard.
+ */
 class AdminPanelProvider extends PanelProvider
 {
+    use DiscoversModuleComponents;
+
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        $panel = $panel
             ->id('admin')
             ->path('admin')
+            ->authGuard('platform')
+            ->authPasswordBroker('platform_admins')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -54,5 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+
+        return $this->discoverModuleComponents($panel, 'Admin');
     }
 }

@@ -25,6 +25,9 @@ main() {
     echo "==> Migrating database"
     php artisan migrate --force
 
+    echo "==> Syncing built-in roles and permissions"
+    php artisan access:sync-roles
+
     echo "==> Caching config, routes, views, and Filament components"
     php artisan optimize
     php artisan filament:optimize

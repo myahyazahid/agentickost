@@ -45,18 +45,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard Access
-    |--------------------------------------------------------------------------
-    |
-    | Emails allowed to open the dashboard outside the local environment.
-    | Temporary until super admin authentication lands in M0.3.
-    |
-    */
-
-    'allowed_emails' => array_filter(explode(',', (string) env('HORIZON_ALLOWED_EMAILS', ''))),
-
-    /*
-    |--------------------------------------------------------------------------
     | Horizon Redis Connection
     |--------------------------------------------------------------------------
     |
