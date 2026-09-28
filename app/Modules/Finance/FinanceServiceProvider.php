@@ -7,6 +7,7 @@ use App\Modules\Finance\Enums\FinancePermission;
 use App\Modules\Finance\Listeners\ProvisionChartForNewTenant;
 use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\BankAccount;
+use App\Modules\Finance\Models\DepositTransaction;
 use App\Modules\Tenancy\Events\TenantCreated;
 use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -29,6 +30,7 @@ class FinanceServiceProvider extends ModuleServiceProvider
         Relation::enforceMorphMap([
             'account' => Account::class,
             'bank_account' => BankAccount::class,
+            'deposit_transaction' => DepositTransaction::class,
         ]);
 
         Event::listen(TenantCreated::class, ProvisionChartForNewTenant::class);

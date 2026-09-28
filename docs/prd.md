@@ -478,6 +478,8 @@ nominal_prorata = harga_periode × (jumlah_hari_ditagih / jumlah_hari_basis)
 - Tunai yang diterima staf dicatat ke akun "Kas di tangan — <nama staf>".
 - Setoran memindahkan saldo ke kas atau bank owner.
 - Selisih antara setoran dan saldo tercatat ditandai dan wajib diselesaikan dengan keterangan.
+- Pembayaran tunai yang dicatat sendiri oleh staf penerimanya langsung terverifikasi, karena uangnya sudah di tangan staf itu dan dikendalikan lewat setoran. Transfer yang dicatat staf tanpa hak verifikasi menunggu verifikasi (FR-PAY-03).
+- Tunai yang diterima Owner langsung masuk akun Kas, tanpa setoran.
 
 ### 8.13 Pembayar
 

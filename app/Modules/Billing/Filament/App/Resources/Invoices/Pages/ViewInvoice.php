@@ -15,6 +15,13 @@ use App\Modules\Billing\States\Invoice\Draft;
 use App\Modules\Billing\States\Invoice\Issued;
 use App\Modules\Billing\States\Invoice\Voided;
 use App\Modules\Billing\Support\InvoiceDocument;
+use App\Modules\Finance\Models\DepositTransaction;
+use App\Modules\Finance\Support\DepositLedger;
+use App\Modules\Payment\Actions\ApplyCredit;
+use App\Modules\Payment\Actions\ApplyDepositToInvoice;
+use App\Modules\Payment\Filament\App\Resources\Payments\PaymentResource;
+use App\Modules\Payment\Models\Payment;
+use App\Modules\Payment\Support\CreditLedger;
 use App\Modules\Property\Enums\AllocationCategory;
 use App\Support\Filament\DomainActions;
 use App\Support\Filament\MoneyInput;
@@ -48,6 +55,7 @@ class ViewInvoice extends ViewRecord
     {
         return [
             $this->issueAction(),
+            $this->recordPaymentAction(),
             $this->shareAction(),
             ActionGroup::make([
                 Action::make('editDraft')
@@ -59,6 +67,8 @@ class ViewInvoice extends ViewRecord
                     ->label('Unduh PDF')
                     ->icon(Heroicon::OutlinedDocumentArrowDown)
                     ->url(fn (): string => route('billing.invoices.pdf', ['invoice' => $this->getRecord()->id]), shouldOpenInNewTab: true),
+                $this->applyCreditAction(),
+                $this->applyDepositAction(),
                 $this->creditAction(),
                 $this->waivePenaltiesAction(),
                 $this->voidAction(),
@@ -78,6 +88,55 @@ class ViewInvoice extends ViewRecord
             ->modalSubmitActionLabel('Terbitkan')
             ->visible(fn (): bool => $this->isDraft() && $this->can('update'))
             ->action(fn (Action $action) => $this->run($action, fn () => app(IssueInvoice::class)->handle($this->getRecord()), 'Tagihan terbit'));
+    }
+
+    private function recordPaymentAction(): Action
+    {
+        return Action::make('recordPayment')
+            ->label('Catat pembayaran')
+            ->icon(Heroicon::OutlinedBanknotes)
+            ->visible(fn (): bool => $this->getRecord()->status->isOpen() && User::current()->can('create', Payment::class))
+            ->url(fn (): string => PaymentResource::getUrl('create', ['kontrak' => $this->getRecord()->contract_id]));
+    }
+
+    private function applyCreditAction(): Action
+    {
+        return Action::make('applyCredit')
+            ->label('Pakai saldo kredit')
+            ->icon(Heroicon::OutlinedArrowsRightLeft)
+            ->visible(fn (): bool => $this->getRecord()->status->isOpen()
+                && $this->creditBalance() > 0
+                && User::current()->can('applyCreditIn', [Payment::class, $this->getRecord()->property()->firstOrFail()]))
+            ->requiresConfirmation()
+            ->modalHeading('Pakai saldo kredit?')
+            ->modalDescription(fn (): string => 'Saldo kredit kontrak ini '.Rupiah::format($this->creditBalance()).'. Saldo dipakai untuk tagihan kontrak yang belum lunas, mulai dari yang paling lama.')
+            ->modalSubmitActionLabel('Pakai saldo')
+            ->action(fn (Action $action) => $this->run($action, fn () => app(ApplyCredit::class)->handle($this->getRecord()->contract()->firstOrFail()), 'Saldo kredit dipakai'));
+    }
+
+    private function applyDepositAction(): Action
+    {
+        return Action::make('applyDeposit')
+            ->label('Bayar dari deposit')
+            ->icon(Heroicon::OutlinedShieldCheck)
+            ->visible(fn (): bool => $this->getRecord()->status->isOpen()
+                && $this->getRecord()->contract_id !== null
+                && DepositLedger::balance($this->getRecord()->contract_id) > 0
+                && User::current()->can('manageFor', [DepositTransaction::class, $this->getRecord()->contract()->firstOrFail()]))
+            ->modalDescription(fn (): string => 'Deposit dipegang '.Rupiah::format(DepositLedger::balance((string) $this->getRecord()->contract_id)).'. Deposit hanya dipakai untuk tagihan berjalan atas persetujuan owner.')
+            ->schema([
+                MoneyInput::make('amount')->label('Jumlah')->required()->minValue(1),
+                Textarea::make('reason')->label('Alasan')->placeholder('Misal: disetujui owner karena penghuni akan keluar bulan ini')->required()->minLength(5),
+            ])
+            ->modalSubmitActionLabel('Bayar dari deposit')
+            ->action(fn (Action $action, array $data) => $this->run($action, fn () => app(ApplyDepositToInvoice::class)->handle($this->getRecord(), $data), 'Tagihan dibayar dari deposit'));
+    }
+
+    private function creditBalance(): int
+    {
+        $contractId = $this->getRecord()->contract_id;
+
+        return $contractId === null ? 0 : CreditLedger::balance($contractId);
     }
 
     private function shareAction(): Action

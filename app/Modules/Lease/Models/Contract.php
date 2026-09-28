@@ -3,8 +3,10 @@
 namespace App\Modules\Lease\Models;
 
 use App\Modules\Access\Concerns\Auditable;
+use App\Modules\Finance\Models\DepositTransaction;
 use App\Modules\Lease\Database\Factories\ContractFactory;
 use App\Modules\Lease\States\Contract\ContractState;
+use App\Modules\Payment\Models\CreditTransaction;
 use App\Modules\Property\Concerns\BelongsToProperty;
 use App\Modules\Property\Enums\RentalPeriod;
 use App\Modules\Property\Models\Room;
@@ -131,6 +133,26 @@ class Contract extends Model
     public function renewal(): HasOne
     {
         return $this->hasOne(self::class, 'renewed_from_contract_id');
+    }
+
+    /**
+     * Deposit ledger (FR-DEP-01), written by the Finance module.
+     *
+     * @return HasMany<DepositTransaction, $this>
+     */
+    public function depositTransactions(): HasMany
+    {
+        return $this->hasMany(DepositTransaction::class);
+    }
+
+    /**
+     * Credit balance ledger (FR-PAY-05), written by the Payment module.
+     *
+     * @return HasMany<CreditTransaction, $this>
+     */
+    public function creditTransactions(): HasMany
+    {
+        return $this->hasMany(CreditTransaction::class);
     }
 
     public function primaryResident(): ?Resident

@@ -5,6 +5,8 @@ namespace App\Modules\Billing\Filament\App\Resources\Invoices\Schemas;
 use App\Modules\Billing\Models\Invoice;
 use App\Modules\Billing\States\Invoice\Voided;
 use App\Modules\Lease\Filament\App\Resources\Contracts\ContractResource;
+use App\Modules\Payment\Filament\App\Resources\Payments\PaymentResource;
+use App\Modules\Payment\Models\PaymentAllocation;
 use App\Support\Money\Rupiah;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
@@ -107,6 +109,31 @@ class InvoiceInfolist
                         ->schema([
                             TextEntry::make('number')->label('Nomor'),
                             TextEntry::make('reason')->label('Alasan'),
+                            TextEntry::make('amount')->label('Jumlah')->formatStateUsing($money)->alignEnd(),
+                        ]),
+                ]),
+            Section::make('Pembayaran')
+                ->columnSpanFull()
+                ->visible(fn (Invoice $record): bool => $record->paymentAllocations()->exists())
+                ->schema([
+                    RepeatableEntry::make('paymentAllocations')
+                        ->hiddenLabel()
+                        ->table([
+                            TableColumn::make('Tanggal'),
+                            TableColumn::make('Dari'),
+                            TableColumn::make('Bagian'),
+                            TableColumn::make('Jumlah')->alignment(Alignment::End),
+                        ])
+                        ->schema([
+                            TextEntry::make('created_at')->label('Tanggal')->date('j M Y'),
+                            TextEntry::make('payment.receipt_number')
+                                ->label('Dari')
+                                ->state(fn (PaymentAllocation $record): string => $record->payment->receipt_number ?? $record->sourceLabel())
+                                ->url(fn (PaymentAllocation $record): ?string => $record->payment_id === null ? null : PaymentResource::getUrl('view', ['record' => $record->payment_id])),
+                            TextEntry::make('allocation_category')
+                                ->label('Bagian')
+                                ->formatStateUsing(fn (PaymentAllocation $record): string => $record->allocation_category->getLabel().($record->isActive() ? '' : ' (dibatalkan)'))
+                                ->color(fn (PaymentAllocation $record): ?string => $record->isActive() ? null : 'gray'),
                             TextEntry::make('amount')->label('Jumlah')->formatStateUsing($money)->alignEnd(),
                         ]),
                 ]),

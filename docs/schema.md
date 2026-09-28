@@ -839,19 +839,24 @@ Bukti transfer disimpan di `attachments` dengan `collection = 'payment_proof'`.
 
 ### 9.2 `payment_allocations` 🏠 — P0
 
-Pemetaan pelunasan ke tagihan per komponen (PRD §8.5). Tepat satu dari `payment_id` atau `credit_transaction_id` terisi.
+Pemetaan pelunasan ke tagihan per komponen (PRD §8.5). Tepat satu dari `payment_id`, `credit_transaction_id`, atau `deposit_transaction_id` terisi.
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | `payment_id` | `CHAR(26)` NULL | FK |
 | `credit_transaction_id` | `CHAR(26)` NULL | FK; pelunasan dari saldo kredit |
+| `deposit_transaction_id` | `CHAR(26)` NULL | FK; pelunasan dari deposit atas persetujuan owner (PRD §8.6) |
 | `invoice_id` | `CHAR(26)` | FK |
 | `allocation_category` | `VARCHAR(16)` | `deposit`, `rent`, `utility`, `addon`, `other`, `penalty` |
 | `amount` | `BIGINT` | `CHECK > 0` |
-| `reversed_at` | `TIMESTAMP` NULL | Diisi saat pembayaran dibalik |
+| `reversed_at` | `TIMESTAMP` NULL | Diisi saat alokasi dibatalkan |
 
-Constraint: `CHECK ((payment_id IS NULL) <> (credit_transaction_id IS NULL))`.
-Indeks: `INDEX(tenant_id, invoice_id)`, `INDEX(tenant_id, payment_id)`.
+Constraint: `CHECK ((payment_id IS NOT NULL) + (credit_transaction_id IS NOT NULL) + (deposit_transaction_id IS NOT NULL) = 1)`.
+Indeks: `INDEX(tenant_id, invoice_id)`, `INDEX(tenant_id, payment_id)`, `INDEX(tenant_id, credit_transaction_id)`.
+
+Alokasi tidak pernah diubah atau dihapus. Alokasi dibatalkan (`reversed_at`) saat pembayarannya dibalik, saat saldo kredit yang dipakai ditarik kembali, atau saat nota kredit membuat tagihan lunas terbayar lebih. Bila hanya sebagian yang dilepas, alokasi lama dibatalkan dan sisanya ditulis sebagai alokasi baru dari sumber yang sama. Uang yang dilepas kembali ke asalnya: pembayaran menjadi saldo kredit (`overpayment`), saldo kredit kembali ke saldo kredit (`reversal`), deposit kembali ke deposit (`reversal`).
+
+Setiap pembayaran terverifikasi memenuhi: `amount` = jumlah alokasi aktifnya + jumlah `credit_transactions` dengan `payment_id` pembayaran itu.
 
 ### 9.3 `credit_transactions` 🏠 — P0
 
@@ -864,12 +869,15 @@ Ledger saldo kredit per kontrak (FR-PAY-05). Saldo = `SUM(amount)`.
 | `amount` | `BIGINT` | Positif menambah saldo, negatif mengurangi |
 | `payment_id` | `CHAR(26)` NULL | Sumber kelebihan bayar |
 | `booking_id` | `CHAR(26)` NULL | Sumber DP yang dikonversi |
-| `invoice_id` | `CHAR(26)` NULL | Tujuan saat `applied` |
+| `invoice_id` | `CHAR(26)` NULL | Tujuan saat `applied`; asal saat saldo dilepas dari tagihan |
 | `occurred_on` | `DATE` | |
 | `created_by_type` | `VARCHAR(32)` | |
 | `created_by_id` | `CHAR(26)` NULL | |
 
-Indeks: `INDEX(tenant_id, contract_id, occurred_on)`.
+Constraint: `CHECK (amount <> 0)`.
+Indeks: `INDEX(tenant_id, contract_id, occurred_on)`, `INDEX(tenant_id, payment_id)`.
+
+Saldo kredit dipakai otomatis saat tagihan kontrak berikutnya terbit, untuk semua tagihan kontrak yang belum lunas mulai dari yang paling lama. Pengelola juga bisa memakainya kapan saja. Saat pembayaran yang meninggalkan saldo kredit dibalik dan saldonya sudah terpakai, pemakaian terbaru ditarik kembali lebih dulu.
 
 ### 9.4 `staff_cash_handovers` 🏠 — P0
 
@@ -885,9 +893,15 @@ Setoran kas dari staf (FR-PAY-08, PRD §8.12).
 | `destination_account_id` | `CHAR(26)` | FK `accounts` (kas atau bank owner) |
 | `status` | `VARCHAR(16)` | `pending`, `confirmed`, `disputed` |
 | `difference_note` | `TEXT` NULL | Wajib jika selisih ≠ 0 saat konfirmasi |
+| `dispute_note` | `TEXT` NULL | Diisi owner saat setoran dipersoalkan |
 | `handed_over_at` | `TIMESTAMP` | |
 | `confirmed_by` | `CHAR(26)` NULL | |
 | `confirmed_at` | `TIMESTAMP` NULL | |
+
+Constraint: `CHECK (status <> 'confirmed' OR actual_amount = expected_amount OR difference_note IS NOT NULL)`.
+Indeks: `INDEX(tenant_id, staff_user_id, property_id)`, `INDEX(tenant_id, status)`.
+
+Kas di tangan staf per properti = pembayaran tunai terverifikasi yang ia terima dikurangi `expected_amount` semua setorannya. Selisih diselesaikan di setoran itu sendiri, tidak terbawa ke saldo berikutnya. Tunai yang diterima owner langsung masuk akun Kas dan tidak perlu disetor. Status: `pending → confirmed`, `pending → disputed`, `disputed → confirmed`.
 
 ### 9.5 `gateway_credentials` 🏠 — P1
 
@@ -1018,16 +1032,21 @@ Ledger deposit per kontrak (FR-DEP-01). Saldo = `SUM(amount)`.
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | `contract_id` | `CHAR(26)` | FK |
-| `type` | `VARCHAR(16)` | `received`, `deducted`, `refunded`, `transferred`, `opening` |
+| `type` | `VARCHAR(16)` | `received`, `deducted`, `refunded`, `transferred`, `opening`, `reversal` |
 | `amount` | `BIGINT` | Positif menambah saldo, negatif mengurangi |
 | `reason` | `TEXT` NULL | Wajib untuk `deducted` (FR-DEP-02) |
-| `payment_allocation_id` | `CHAR(26)` NULL | Sumber untuk `received` |
+| `payment_allocation_id` | `CHAR(26)` NULL | Sumber untuk `received`; alokasi yang dibatalkan untuk `reversal` |
 | `invoice_id` | `CHAR(26)` NULL | Tujuan potongan jika dipakai melunasi tagihan |
+| `related_contract_id` | `CHAR(26)` NULL | FK `contracts`; kontrak lawan untuk `transferred` |
+| `account_id` | `CHAR(26)` NULL | FK `accounts`; kas atau rekening asal `refunded` |
 | `settlement_id` | `CHAR(26)` NULL | Jika terjadi saat check-out |
 | `occurred_on` | `DATE` | |
 | `created_by` | `CHAR(26)` NULL | |
 
+Constraint: `CHECK (amount <> 0)`, `CHECK (type <> 'deducted' OR reason IS NOT NULL)`.
 Indeks: `INDEX(tenant_id, contract_id, occurred_on)`.
+
+`reversal` mencatat deposit yang keluar karena pembayarannya dibalik, atau deposit yang kembali karena alokasinya dilepas. Pemindahan ke kontrak lain menulis dua baris `transferred` yang saling menunjuk lewat `related_contract_id`. Pembayaran yang deposit-nya sudah dipotong, dikembalikan, atau dipindahkan tidak bisa dibalik.
 
 Refund tidak boleh membuat saldo negatif (FR-DEP-03); dicek dengan mengunci baris kontrak (§14.1).
 

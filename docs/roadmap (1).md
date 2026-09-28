@@ -174,16 +174,16 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.4 Pembayaran, Kas Staf & Deposit — `PAY` (P0), `DEP`
 
-- [ ] Test alokasi pembayaran sesuai PRD §8.5 sebelum implementasi
-- [ ] Pencatatan pembayaran manual transfer dan tunai (FR-PAY-01)
-- [ ] Unggah bukti transfer dan antrian verifikasi (FR-PAY-02, FR-PAY-03)
-- [ ] Pembayaran parsial dan multi-tagihan dengan alokasi otomatis dan manual (FR-PAY-04)
-- [ ] Saldo kredit dari kelebihan bayar (FR-PAY-05)
-- [ ] Pembalikan pembayaran (PRD §8.10)
-- [ ] Kuitansi PDF (FR-PAY-06)
-- [ ] Kas di tangan staf dan setoran dengan penanda selisih (FR-PAY-07, FR-PAY-08, PRD §8.12)
-- [ ] Ledger deposit: terima, potong, refund, pindah (FR-DEP-01 sampai FR-DEP-03)
-- [ ] Laporan deposit dipegang per properti (FR-DEP-04)
+- [x] Test alokasi pembayaran sesuai PRD §8.5 sebelum implementasi
+- [x] Pencatatan pembayaran manual transfer dan tunai (FR-PAY-01)
+- [x] Unggah bukti transfer dan antrian verifikasi (FR-PAY-02, FR-PAY-03): bukti diunggah staf; unggah oleh penghuni sendiri menunggu portal (M1.5.3)
+- [x] Pembayaran parsial dan multi-tagihan dengan alokasi otomatis dan manual (FR-PAY-04)
+- [x] Saldo kredit dari kelebihan bayar (FR-PAY-05): dipakai otomatis saat tagihan berikutnya terbit; nota kredit pada tagihan lunas juga menjadi saldo kredit
+- [x] Pembalikan pembayaran (PRD §8.10)
+- [x] Kuitansi PDF (FR-PAY-06), dengan tautan berbagi
+- [x] Kas di tangan staf dan setoran dengan penanda selisih (FR-PAY-07, FR-PAY-08, PRD §8.12)
+- [x] Ledger deposit: terima, potong, refund, pindah (FR-DEP-01 sampai FR-DEP-03), termasuk bayar tagihan dari deposit atas persetujuan owner
+- [x] Laporan deposit dipegang per properti (FR-DEP-04)
 
 **Kriteria selesai:** skenario bayar parsial, lebih bayar, bayar tunai lewat penjaga, dan setoran dengan selisih semuanya teruji dan menghasilkan saldo yang benar.
 

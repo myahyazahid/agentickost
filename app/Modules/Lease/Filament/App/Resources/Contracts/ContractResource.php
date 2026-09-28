@@ -3,6 +3,7 @@
 namespace App\Modules\Lease\Filament\App\Resources\Contracts;
 
 use App\Modules\Access\Models\User;
+use App\Modules\Finance\Filament\App\RelationManagers\DepositTransactionsRelationManager;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Pages\CreateContract;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Pages\EditDraftContract;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Pages\ListContracts;
@@ -13,6 +14,7 @@ use App\Modules\Lease\Filament\App\Resources\Contracts\Schemas\ContractForm;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Schemas\ContractInfolist;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Tables\ContractsTable;
 use App\Modules\Lease\Models\Contract;
+use App\Modules\Payment\Filament\App\RelationManagers\CreditTransactionsRelationManager;
 use App\Support\Filament\SentenceCaseLabels;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -70,6 +72,8 @@ class ContractResource extends Resource
         return [
             OccupantsRelationManager::class,
             HoldsRelationManager::class,
+            DepositTransactionsRelationManager::class,
+            CreditTransactionsRelationManager::class,
         ];
     }
 

@@ -9,6 +9,7 @@ use App\Modules\Billing\States\Invoice\Draft;
 use App\Modules\Billing\States\Invoice\InvoiceState;
 use App\Modules\Lease\Models\Contract;
 use App\Modules\Lease\Models\Payer;
+use App\Modules\Payment\Models\PaymentAllocation;
 use App\Modules\Property\Concerns\BelongsToProperty;
 use App\Modules\Property\Models\Property;
 use App\Modules\Tenancy\Concerns\BelongsToTenant;
@@ -142,6 +143,17 @@ class Invoice extends Model
     public function creditNotes(): HasMany
     {
         return $this->hasMany(CreditNote::class);
+    }
+
+    /**
+     * What paid this invoice: payments, credit balance, or deposit. Written
+     * by the Payment module.
+     *
+     * @return HasMany<PaymentAllocation, $this>
+     */
+    public function paymentAllocations(): HasMany
+    {
+        return $this->hasMany(PaymentAllocation::class);
     }
 
     /**
