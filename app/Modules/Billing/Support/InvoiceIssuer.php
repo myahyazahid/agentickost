@@ -4,6 +4,7 @@ namespace App\Modules\Billing\Support;
 
 use App\Modules\Billing\Engine\TotalRounding;
 use App\Modules\Billing\Enums\InvoiceItemType;
+use App\Modules\Billing\Enums\InvoiceType;
 use App\Modules\Billing\Events\InvoiceIssued;
 use App\Modules\Billing\Models\Invoice;
 use App\Modules\Billing\Models\InvoiceItem;
@@ -19,7 +20,8 @@ use Illuminate\Validation\ValidationException;
 /**
  * Turns a draft into an issued invoice: rounds the total to the property's
  * unit on its own line (PRD §8.1), numbers it (FR-BIL-07), and records who
- * issued it. Call inside the Action's transaction.
+ * issued it. Opening arrears keep the exact amount the owner entered, so
+ * they match the opening journal. Call inside the Action's transaction.
  */
 final class InvoiceIssuer
 {
@@ -41,7 +43,9 @@ final class InvoiceIssuer
             throw ValidationException::withMessages(['items' => 'Tagihan belum punya rincian.']);
         }
 
-        $rounding = TotalRounding::difference($total, $property->resolvedSettings()->rounding_unit);
+        $rounding = $invoice->type === InvoiceType::Opening
+            ? 0
+            : TotalRounding::difference($total, $property->resolvedSettings()->rounding_unit);
 
         if ($rounding !== 0) {
             InvoiceItem::create([

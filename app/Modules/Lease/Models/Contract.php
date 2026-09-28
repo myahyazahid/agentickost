@@ -54,6 +54,7 @@ use Spatie\ModelStates\HasStates;
  * @property string|null $renewed_from_contract_id
  * @property string|null $clauses
  * @property Carbon|null $end_reminder_sent_at
+ * @property Carbon|null $imported_at Set for contracts carried in at onboarding (FR-ONB-02)
  * @property string|null $created_by
  */
 #[Fillable([
@@ -61,7 +62,7 @@ use Spatie\ModelStates\HasStates;
     'start_date', 'end_date', 'billing_anchor_day', 'next_period_start', 'notify_resident',
     'notify_payer', 'early_termination_penalty_amount', 'termination_penalty_amount',
     'notice_given_on', 'planned_move_out_on', 'ended_on', 'termination_reason',
-    'renewed_from_contract_id', 'clauses', 'created_by',
+    'renewed_from_contract_id', 'clauses', 'created_by', 'imported_at',
 ])]
 #[UseFactory(ContractFactory::class)]
 class Contract extends Model
@@ -184,6 +185,15 @@ class Contract extends Model
         return $this->residents()->wherePivot('is_primary', true)->first();
     }
 
+    /**
+     * Whether the contract was already running before the tenant started
+     * using KostPilot. Its deposit comes in with the opening balance.
+     */
+    public function isImported(): bool
+    {
+        return $this->imported_at !== null;
+    }
+
     public function isRunning(): bool
     {
         return $this->status->isRunning();
@@ -211,6 +221,7 @@ class Contract extends Model
             'planned_move_out_on' => 'date',
             'ended_on' => 'date',
             'end_reminder_sent_at' => 'datetime',
+            'imported_at' => 'datetime',
         ];
     }
 }

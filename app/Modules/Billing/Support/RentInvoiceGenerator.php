@@ -205,10 +205,15 @@ final class RentInvoiceGenerator
 
     /**
      * The first invoice carries the deposit (docs/adr/0008). A renewal only
-     * bills what its deposit adds to the one carried over.
+     * bills what its deposit adds to the one carried over. A contract carried
+     * in at onboarding brings its deposit with the opening balance instead.
      */
     public function depositToBill(Contract $contract): int
     {
+        if ($contract->isImported()) {
+            return 0;
+        }
+
         $billed = Invoice::query()
             ->where('contract_id', $contract->id)
             ->where('type', InvoiceType::Rent->value)

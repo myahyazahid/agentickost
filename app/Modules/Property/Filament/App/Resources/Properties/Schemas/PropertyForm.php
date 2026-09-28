@@ -19,48 +19,8 @@ class PropertyForm
     {
         return $schema
             ->components([
-                Section::make('Identitas')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Nama properti')
-                            ->required()
-                            ->maxLength(150),
-                        TextInput::make('code')
-                            ->label('Kode')
-                            ->helperText('Singkatan untuk nomor dokumen, misal KMG.')
-                            ->required()
-                            ->maxLength(20),
-                        Select::make('gender_policy')
-                            ->label('Jenis kost')
-                            ->options(GenderPolicy::class)
-                            ->required(),
-                        Select::make('timezone')
-                            ->label('Zona waktu')
-                            ->helperText('Jatuh tempo dan denda dihitung menurut zona waktu ini.')
-                            ->options(Timezone::class)
-                            ->default(Timezone::Wib->value)
-                            ->required(),
-                    ]),
-                Section::make('Alamat')
-                    ->columns(2)
-                    ->schema([
-                        Textarea::make('address')
-                            ->label('Alamat')
-                            ->required()
-                            ->columnSpanFull(),
-                        TextInput::make('city')
-                            ->label('Kota atau kabupaten')
-                            ->required()
-                            ->maxLength(80),
-                        TextInput::make('province')
-                            ->label('Provinsi')
-                            ->required()
-                            ->maxLength(80),
-                        TextInput::make('postal_code')
-                            ->label('Kode pos')
-                            ->maxLength(10),
-                    ]),
+                self::identitySection(),
+                self::addressSection(),
                 Section::make('Aturan dan fasilitas')
                     ->schema([
                         Textarea::make('rules')
@@ -78,6 +38,59 @@ class PropertyForm
                             ->maxFiles(10)
                             ->reorderable(),
                     ]),
+            ]);
+    }
+
+    /**
+     * Also used by the setup wizard (FR-ONB-01).
+     */
+    public static function identitySection(): Section
+    {
+        return Section::make('Identitas')
+            ->columns(2)
+            ->schema([
+                TextInput::make('name')
+                    ->label('Nama properti')
+                    ->required()
+                    ->maxLength(150),
+                TextInput::make('code')
+                    ->label('Kode')
+                    ->helperText('Singkatan untuk nomor dokumen, misal KMG.')
+                    ->required()
+                    ->maxLength(20),
+                Select::make('gender_policy')
+                    ->label('Jenis kost')
+                    ->options(GenderPolicy::class)
+                    ->required(),
+                Select::make('timezone')
+                    ->label('Zona waktu')
+                    ->helperText('Jatuh tempo dan denda dihitung menurut zona waktu ini.')
+                    ->options(Timezone::class)
+                    ->default(Timezone::Wib->value)
+                    ->required(),
+            ]);
+    }
+
+    public static function addressSection(): Section
+    {
+        return Section::make('Alamat')
+            ->columns(2)
+            ->schema([
+                Textarea::make('address')
+                    ->label('Alamat')
+                    ->required()
+                    ->columnSpanFull(),
+                TextInput::make('city')
+                    ->label('Kota atau kabupaten')
+                    ->required()
+                    ->maxLength(80),
+                TextInput::make('province')
+                    ->label('Provinsi')
+                    ->required()
+                    ->maxLength(80),
+                TextInput::make('postal_code')
+                    ->label('Kode pos')
+                    ->maxLength(10),
             ]);
     }
 }

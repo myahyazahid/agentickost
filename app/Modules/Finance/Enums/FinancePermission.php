@@ -15,13 +15,14 @@ enum FinancePermission: string implements DefinesPermissions
     case RecordExpenses = 'expense.record';
     case SpendFromCashAndBank = 'expense.spend-cash-bank';
     case VoidExpenses = 'expense.void';
+    case ManageOpeningBalances = 'finance.opening-balance';
 
     public function defaultRoles(): array
     {
         return match ($this) {
             self::View, self::ManageAccounts => [Role::Owner, Role::Accountant],
             self::ViewDeposits => [Role::Owner, Role::Manager, Role::Accountant],
-            self::ManageBankAccounts, self::ManageDeposits, self::VoidExpenses => [Role::Owner],
+            self::ManageBankAccounts, self::ManageDeposits, self::VoidExpenses, self::ManageOpeningBalances => [Role::Owner],
             self::RecordExpenses => [Role::Owner, Role::Manager, Role::Caretaker],
             self::SpendFromCashAndBank => [Role::Owner, Role::Manager],
         };

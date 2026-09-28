@@ -4,19 +4,22 @@ namespace App\Modules\Finance\Listeners;
 
 use App\Modules\Finance\Enums\AccountSubtype;
 use App\Modules\Finance\Enums\JournalEvent;
+use App\Modules\Finance\Enums\OpeningBalanceKind;
 use App\Modules\Finance\Events\DepositDeducted;
 use App\Modules\Finance\Events\DepositRefunded;
 use App\Modules\Finance\Events\DepositTransferred;
 use App\Modules\Finance\Events\ExpenseRecorded;
 use App\Modules\Finance\Events\ExpenseVoided;
+use App\Modules\Finance\Events\OpeningBalancePosted;
 use App\Modules\Finance\Journal\JournalLineDraft;
 use App\Modules\Finance\Journal\JournalPoster;
 use App\Modules\Finance\Journal\LedgerAccounts;
+use App\Modules\Finance\Models\OpeningBalanceLine;
 use App\Modules\Lease\Models\Contract;
 use Illuminate\Events\Dispatcher;
 
 /**
- * Journals for deposits and expenses (PRD §8.14).
+ * Journals for deposits, expenses, and opening balances (PRD §8.14).
  */
 final class FinanceJournals
 {
@@ -119,6 +122,43 @@ final class FinanceJournals
     }
 
     /**
+     * Everything carried in at onboarding, against opening equity
+     * (FR-ONB-05). Each line and its equity side share a property, so every
+     * property's slice of the journal balances on its own.
+     */
+    public function openingBalancePosted(OpeningBalancePosted $event): void
+    {
+        $balance = $event->openingBalance;
+        $equity = LedgerAccounts::id(AccountSubtype::OpeningEquity);
+        $lines = [];
+
+        foreach ($balance->lines()->with(['contract', 'account'])->orderBy('id')->get() as $line) {
+            /** @var OpeningBalanceLine $line */
+            $propertyId = $line->contract->property_id ?? $line->account?->property_id;
+            $amount = $line->amount;
+
+            [$accountId, $signed] = match ($line->kind) {
+                OpeningBalanceKind::Receivable => [LedgerAccounts::id(AccountSubtype::Receivable), $amount],
+                OpeningBalanceKind::Deposit => [LedgerAccounts::id(AccountSubtype::DepositLiability), -$amount],
+                OpeningBalanceKind::Credit => [LedgerAccounts::id(AccountSubtype::CreditLiability), -$amount],
+                OpeningBalanceKind::Cash => [(string) $line->account_id, $amount],
+            };
+
+            $lines[] = new JournalLineDraft($accountId, $signed, $line->contract_id, $propertyId);
+            $lines[] = new JournalLineDraft($equity, -$signed, null, $propertyId);
+        }
+
+        $this->journals->post(
+            JournalEvent::OpeningBalance,
+            $balance->cutoff_date,
+            'Saldo awal per '.$balance->cutoff_date->translatedFormat('j F Y'),
+            $balance,
+            null,
+            $lines,
+        );
+    }
+
+    /**
      * @return array<class-string, string>
      */
     public function subscribe(Dispatcher $events): array
@@ -129,6 +169,7 @@ final class FinanceJournals
             DepositTransferred::class => 'depositTransferred',
             ExpenseRecorded::class => 'expenseRecorded',
             ExpenseVoided::class => 'expenseVoided',
+            OpeningBalancePosted::class => 'openingBalancePosted',
         ];
     }
 }

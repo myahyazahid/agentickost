@@ -15,6 +15,8 @@ use App\Modules\Finance\Models\Expense;
 use App\Modules\Finance\Models\FiscalPeriod;
 use App\Modules\Finance\Models\JournalEntry;
 use App\Modules\Finance\Models\JournalLine;
+use App\Modules\Finance\Models\OpeningBalance;
+use App\Modules\Finance\Models\OpeningBalanceLine;
 use App\Modules\Tenancy\Events\TenantCreated;
 use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -42,6 +44,8 @@ class FinanceServiceProvider extends ModuleServiceProvider
             'journal_entry' => JournalEntry::class,
             'journal_line' => JournalLine::class,
             'expense' => Expense::class,
+            'opening_balance' => OpeningBalance::class,
+            'opening_balance_line' => OpeningBalanceLine::class,
         ]);
 
         Event::listen(TenantCreated::class, ProvisionChartForNewTenant::class);

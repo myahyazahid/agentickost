@@ -220,16 +220,17 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.8 Onboarding & Impor — `ONB`
 
-- [ ] Wizard setup awal (FR-ONB-01)
-- [ ] Template Excel untuk kamar, penghuni, dan kontrak (FR-ONB-02)
-- [ ] Pratinjau impor dengan error per baris; impor all-or-nothing (FR-ONB-03)
-- [ ] Input saldo awal: tunggakan, deposit, kas/bank per tanggal cut-off (FR-ONB-04)
-- [ ] Jurnal pembuka otomatis (FR-ONB-05)
-- [ ] Checklist onboarding di dashboard (FR-ONB-06)
+- [x] Wizard setup awal (FR-ONB-01): properti, aturan tagihan dan denda, tipe kamar dengan harga dan nomor kamar, rekening tujuan, disimpan sekaligus
+- [x] Template Excel untuk kamar, penghuni, dan kontrak (FR-ONB-02): satu berkas .xlsx tiga sheet, atau .csv per jenis data; kontrak berjalan ditagih mulai periode yang belum ditagih dan deposit-nya tidak ditagih ulang
+- [x] Pratinjau impor dengan error per baris; impor all-or-nothing (FR-ONB-03)
+- [x] Input saldo awal: tunggakan, deposit, kas/bank per tanggal cut-off (FR-ONB-04), plus saldo kredit
+- [x] Jurnal pembuka otomatis (FR-ONB-05)
+- [x] Checklist onboarding di dashboard (FR-ONB-06)
 
 **Kriteria selesai:** data nyata dari minimal satu calon pilot berhasil diimpor dan saldo awalnya cocok dengan catatan owner.
 
-### M1.9 Dashboard & Registrasi — `RPT` (P0), `TNT`
+
+
 
 - [ ] Dashboard: okupansi, pendapatan bulan berjalan, tunggakan, tiket terbuka, pembayaran menunggu (FR-RPT-01)
 - [ ] Daftar tunggakan per penghuni (FR-RPT-02)
@@ -481,4 +482,5 @@ Ide dan permintaan di luar roadmap. Ditinjau di akhir setiap fase.
 
 | Tanggal | Ide / permintaan | Sumber | Keputusan |
 |---|---|---|---|
+| 28 Sep 2026 | Opsi "kontrak yang sudah berjalan" di formulir kontrak, supaya kost kecil bisa memasukkan kontrak lama tanpa berkas impor; sekarang kontrak berjalan hanya masuk lewat Impor data | Ditemukan saat M1.8 | Belum diputuskan |
 | 28 Sep 2026 | Terjemahan bahasa Indonesia untuk pesan validasi bawaan Laravel (`lang/id`); sekarang pesan seperti "The moved on field must be a date after ..." masih berbahasa Inggris (NFR-LOC-01) | Ditemukan saat M1.6 | Belum diputuskan |

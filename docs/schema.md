@@ -515,6 +515,7 @@ Indeks: `INDEX(tenant_id, phone)`.
 | `renewed_from_contract_id` | `CHAR(26)` NULL | FK `contracts`, untuk perpanjangan |
 | `clauses` | `TEXT` NULL | |
 | `created_by` | `CHAR(26)` | FK `users` |
+| `imported_at` | `TIMESTAMP` NULL | Terisi untuk kontrak yang sudah berjalan sebelum memakai KostPilot dan diimpor saat onboarding (FR-ONB-02). Deposit-nya masuk lewat saldo awal, tidak ditagih |
 
 Indeks: `UNIQUE(tenant_id, number)`, `INDEX(tenant_id, status, next_period_start)`, `INDEX(tenant_id, room_id, status)`.
 
@@ -695,7 +696,7 @@ Pencegahan tumpang tindih dijelaskan di §14.2.
 | `resident_id` | `CHAR(26)` NULL | Terisi jika kontrak `split_billing` |
 | `payer_id` | `CHAR(26)` | FK; penerima tagihan |
 | `number` | `VARCHAR(40)` NULL | Terisi saat terbit |
-| `type` | `VARCHAR(16)` | `rent`, `adhoc`, `final_settlement` |
+| `type` | `VARCHAR(16)` | `rent`, `adhoc`, `final_settlement`, `opening` |
 | `status` | `VARCHAR(16)` | `draft`, `issued`, `partial`, `paid`, `void` (PRD §9.4) |
 | `generation_key` | `VARCHAR(120)` NULL | Kunci idempotensi, lihat bawah |
 | `period_start` | `DATE` NULL | Periode sewa yang ditagih |
@@ -1013,7 +1014,7 @@ Tidak dapat diubah atau dihapus. Koreksi dengan entri pembalikan.
 | `property_id` | `CHAR(26)` NULL | |
 | `number` | `VARCHAR(40)` | |
 | `entry_date` | `DATE` | |
-| `event` | `VARCHAR(40)` | `invoice_issued`, `invoice_voided`, `penalty_accrued`, `penalty_waived`, `credit_note_issued`, `payment_verified`, `payment_reversed`, `credit_applied`, `allocation_released`, `deposit_deducted`, `deposit_refunded`, `deposit_transferred`, `cash_handed_over`, `expense_recorded`, `expense_voided` (PRD §8.14) |
+| `event` | `VARCHAR(40)` | `invoice_issued`, `invoice_voided`, `penalty_accrued`, `penalty_waived`, `credit_note_issued`, `payment_verified`, `payment_reversed`, `credit_applied`, `allocation_released`, `deposit_deducted`, `deposit_refunded`, `deposit_transferred`, `cash_handed_over`, `expense_recorded`, `expense_voided`, `opening_balance` (PRD §8.14) |
 | `description` | `VARCHAR(255)` | |
 | `source_type` | `VARCHAR(80)` NULL | Polymorphic ke dokumen sumber |
 | `source_id` | `CHAR(26)` NULL | |
@@ -1108,10 +1109,18 @@ Saldo awal saat onboarding (FR-ONB-04).
 | `kind` | `VARCHAR(16)` | `receivable`, `deposit`, `credit`, `cash` |
 | `contract_id` | `CHAR(26)` NULL | Untuk `receivable`, `deposit`, `credit` |
 | `account_id` | `CHAR(26)` NULL | Untuk `cash` |
-| `amount` | `BIGINT` | |
+| `amount` | `BIGINT` | `CHECK > 0` |
 | `note` | `VARCHAR(255)` NULL | |
 
-Tunggakan awal dibuat sebagai tagihan `adhoc` bertanggal cut-off agar bisa dialokasi pembayaran seperti biasa.
+Constraint: `kind = 'cash'` wajib `account_id` tanpa `contract_id`; jenis lain wajib `contract_id` tanpa `account_id`.
+
+Saldo awal berstatus draf sampai diposting dan boleh diubah atau dihapus selama draf. Posting menulis semuanya bertanggal cut-off, dalam satu transaksi:
+
+- Tunggakan menjadi tagihan `opening` yang bisa dialokasi pembayaran seperti biasa. Tagihan ini tidak dibulatkan, tidak kena denda, tidak dijurnal sendiri, dan tidak bisa dibatalkan (koreksi lewat nota kredit).
+- Deposit menjadi `deposit_transactions` bertipe `opening`, hanya untuk kontrak yang diimpor. Saldo kredit menjadi `credit_transactions` bertipe `opening`.
+- Satu jurnal `opening_balance`: setiap baris berpasangan dengan Ekuitas Saldo Awal di properti yang sama.
+
+Satu kontrak tidak boleh punya tunggakan dan saldo kredit sekaligus, dan setiap jenis saldo awal per kontrak hanya dicatat sekali.
 
 ---
 

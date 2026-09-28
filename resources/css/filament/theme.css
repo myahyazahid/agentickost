@@ -1,0 +1,188 @@
+@import '../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../app/Filament/**/*';
+@source '../../../app/Modules/*/Filament/**/*';
+@source '../../../resources/views/filament/**/*';
+
+/*
+ * KostPilot theme for both panels, light mode only. The palette (warm grays,
+ * red primary) is registered in App\Support\Filament\PanelTheme; this file
+ * restyles Filament's components without moving them. Rules sit in the
+ * components layer after Filament's, so a matching selector wins and utility
+ * classes still override both.
+ */
+@layer components {
+    /* Frame: white topbar and sidebar with warm hairlines around the
+       off-white canvas, so the working area reads as the page. */
+    .fi-topbar {
+        @apply shadow-none ring-gray-200;
+    }
+
+    .fi-sidebar {
+        @apply lg:border-e lg:border-gray-200 lg:bg-white;
+    }
+
+    .fi-logo {
+        @apply tracking-[-0.03em] text-primary-700;
+    }
+
+    /* Navigation: quiet by default, soft red only on the current page. */
+    .fi-sidebar-group-label {
+        @apply text-xs font-semibold text-gray-500;
+    }
+
+    .fi-sidebar-item-btn > .fi-icon {
+        @apply text-gray-500;
+    }
+
+    .fi-sidebar-item.fi-sidebar-item-has-url > .fi-sidebar-item-btn {
+        @apply hover:bg-gray-100 focus-visible:bg-gray-100;
+    }
+
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+        @apply bg-primary-50 hover:bg-primary-50;
+
+        & > .fi-sidebar-item-label {
+            @apply font-semibold;
+        }
+    }
+
+    /* Headings carry the product's voice: bold (Instrument Sans tops out at
+       700) and tightly tracked. */
+    .fi-header-heading {
+        @apply font-bold tracking-[-0.035em];
+    }
+
+    .fi-section-header-heading,
+    .fi-modal-heading {
+        @apply tracking-[-0.01em];
+    }
+
+    /* Content surfaces: warm hairline instead of a 5% black ring, and a
+       shadow faint enough to separate white from the canvas without lifting. */
+    .fi-section:not(.fi-section-not-contained):not(.fi-aside),
+    .fi-section:not(.fi-section-not-contained).fi-aside > .fi-section-content-ctn,
+    .fi-ta-ctn,
+    .fi-wi-stats-overview-stat,
+    .fi-simple-main {
+        @apply shadow-[0_1px_2px_rgb(20_18_21/0.04)] ring-gray-200;
+    }
+
+    /* Section headers get the reference's title-bar treatment: a faint warm
+       band fading into the white body, which marks where a group of fields
+       starts. The radius follows the section's own corners. */
+    .fi-section:not(.fi-section-not-contained):not(.fi-aside) > .fi-section-header {
+        @apply rounded-t-xl bg-linear-to-b from-gray-100/70 to-white;
+    }
+
+    .fi-section:not(.fi-section-not-contained):not(.fi-aside).fi-collapsed > .fi-section-header {
+        @apply rounded-b-xl;
+    }
+
+    .fi-section:not(.fi-section-not-contained):not(.fi-aside).fi-compact > .fi-section-header {
+        @apply rounded-t-lg;
+    }
+
+    .fi-section:not(.fi-section-not-contained):not(.fi-aside).fi-compact.fi-collapsed > .fi-section-header {
+        @apply rounded-b-lg;
+    }
+
+    .fi-dropdown-panel,
+    .fi-global-search-results-ctn,
+    .fi-modal-window {
+        @apply ring-gray-200;
+    }
+
+    /* Filter tabs share the navigation's language: pill shape, soft red on
+       the selected one. */
+    .fi-tabs:not(.fi-contained) {
+        @apply shadow-[0_1px_2px_rgb(20_18_21/0.04)] ring-gray-200;
+
+        &:not(.fi-vertical) {
+            @apply rounded-full p-1.5;
+        }
+    }
+
+    .fi-tabs-item {
+        @apply rounded-full hover:bg-gray-100 focus-visible:bg-gray-100;
+
+        &.fi-active {
+            @apply bg-primary-50 hover:bg-primary-50;
+        }
+    }
+
+    /* Tables: a light header that labels columns without competing with the
+       rows, and tabular figures so rupiah amounts line up. */
+    .fi-ta-table > thead > tr {
+        @apply bg-gray-100/60;
+    }
+
+    .fi-ta-header-cell {
+        @apply text-xs font-semibold text-gray-600;
+    }
+
+    .fi-ta-table {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Status badges as soft pills: the tint and icon carry the state, so the
+       outline ring goes. */
+    .fi-badge {
+        @apply rounded-full ring-0;
+
+        &.fi-color {
+            @apply ring-0;
+        }
+    }
+
+    /* Pill buttons mark actions; inputs and cards keep smaller radii so
+       fields never read as buttons. */
+    .fi-btn {
+        @apply rounded-full font-semibold;
+    }
+
+    .fi-btn:not(.fi-color):not(.fi-outlined):not(.fi-disabled):not([disabled]) {
+        @apply ring-gray-200 hover:bg-white hover:text-primary-700 hover:ring-primary-300;
+    }
+
+    .fi-btn-group {
+        @apply rounded-full;
+
+        & > .fi-btn {
+            &:nth-child(1 of .fi-btn) {
+                @apply rounded-s-full;
+            }
+
+            &:nth-last-child(1 of .fi-btn) {
+                @apply rounded-e-full;
+            }
+        }
+    }
+
+    /* Fields: a soft red halo around the focus ring, the same focus signal
+       the brand uses elsewhere. */
+    .fi-input-wrp {
+        @apply shadow-none;
+
+        &:not(.fi-disabled):not(:has(.fi-ac-action:focus)) {
+            @apply focus-within:outline-3 focus-within:outline-primary-500/15 focus-within:outline-solid;
+        }
+    }
+
+    .fi-global-search-field .fi-input-wrp {
+        @apply rounded-full bg-gray-100 ring-transparent;
+
+        &:focus-within {
+            @apply bg-white;
+        }
+    }
+
+    /* Login and other guest pages: one red glow behind the card, the only
+       decorative element in the theme. */
+    .fi-simple-layout {
+        background-image: radial-gradient(closest-side, rgb(224 38 44 / 0.14), transparent 70%);
+        background-repeat: no-repeat;
+        background-position: center -240px;
+        background-size: 100% 640px;
+    }
+}

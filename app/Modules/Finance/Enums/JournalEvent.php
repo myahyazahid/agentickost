@@ -25,6 +25,7 @@ enum JournalEvent: string implements HasLabel
     case CashHandedOver = 'cash_handed_over';
     case ExpenseRecorded = 'expense_recorded';
     case ExpenseVoided = 'expense_voided';
+    case OpeningBalance = 'opening_balance';
 
     public function getLabel(): string
     {
@@ -45,6 +46,7 @@ enum JournalEvent: string implements HasLabel
             self::CashHandedOver => 'Setoran staf',
             self::ExpenseRecorded => 'Pengeluaran',
             self::ExpenseVoided => 'Pengeluaran dibatalkan',
+            self::OpeningBalance => 'Saldo awal',
         };
     }
 }

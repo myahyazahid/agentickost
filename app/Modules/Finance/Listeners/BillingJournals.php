@@ -2,6 +2,7 @@
 
 namespace App\Modules\Finance\Listeners;
 
+use App\Modules\Billing\Enums\InvoiceType;
 use App\Modules\Billing\Events\CreditNoteIssued;
 use App\Modules\Billing\Events\InvoiceIssued;
 use App\Modules\Billing\Events\InvoiceVoided;
@@ -30,6 +31,13 @@ final class BillingJournals
     public function invoiceIssued(InvoiceIssued $event): void
     {
         $invoice = $event->invoice;
+
+        // Opening arrears were earned before KostPilot; the opening balance
+        // journal books them against opening equity (FR-ONB-05).
+        if ($invoice->type === InvoiceType::Opening) {
+            return;
+        }
+
         $receivable = LedgerAccounts::id(AccountSubtype::Receivable);
         $lines = [];
 

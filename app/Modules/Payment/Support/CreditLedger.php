@@ -13,6 +13,7 @@ use App\Modules\Payment\Events\CreditRefunded;
 use App\Modules\Payment\Models\CreditTransaction;
 use App\Modules\Payment\Models\PaymentAllocation;
 use App\Support\Actors\ActorContext;
+use Carbon\CarbonInterface;
 use LogicException;
 
 /**
@@ -33,7 +34,7 @@ final class CreditLedger
     }
 
     /**
-     * @param  array{payment_id?: string, invoice_id?: string}  $attributes
+     * @param  array{payment_id?: string, invoice_id?: string, occurred_on?: CarbonInterface}  $attributes
      */
     public function record(Contract $contract, CreditTransactionType $type, int $amount, array $attributes = []): CreditTransaction
     {

@@ -45,6 +45,12 @@ final class VoidInvoice extends Action
                 ]);
             }
 
+            if ($invoice->type === InvoiceType::Opening) {
+                throw ValidationException::withMessages([
+                    'reason' => 'Tunggakan saldo awal tidak bisa dibatalkan. Kurangi dengan nota kredit.',
+                ]);
+            }
+
             if ($invoice->credited_amount > 0) {
                 throw ValidationException::withMessages([
                     'reason' => 'Tagihan ini sudah punya nota kredit. Koreksi berikutnya juga lewat nota kredit.',

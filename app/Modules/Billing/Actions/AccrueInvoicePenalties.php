@@ -4,6 +4,7 @@ namespace App\Modules\Billing\Actions;
 
 use App\Modules\Billing\Engine\PenaltyCalculator;
 use App\Modules\Billing\Engine\PenaltyRules;
+use App\Modules\Billing\Enums\InvoiceType;
 use App\Modules\Billing\Events\PenaltyAccrued;
 use App\Modules\Billing\Models\Invoice;
 use App\Modules\Billing\Models\PenaltyAccrual;
@@ -28,7 +29,9 @@ final class AccrueInvoicePenalties extends Action
         $property = $invoice->property()->firstOrFail();
         $settings = $property->resolvedSettings();
 
-        if ($settings->penalty_type === PenaltyType::None) {
+        // Arrears carried in at onboarding already include whatever the owner
+        // charged before; adding penalties on top would count them twice.
+        if ($settings->penalty_type === PenaltyType::None || $invoice->type === InvoiceType::Opening) {
             return [];
         }
 

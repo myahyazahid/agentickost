@@ -21,6 +21,8 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(LazilyRefreshDatabase::class)
     ->beforeEach(function () {
+        // Panels load their theme through Vite, and CI runs tests without building assets.
+        $this->withoutVite();
         Http::preventStrayRequests();
         Sleep::fake(syncWithCarbon: true);
         Exceptions::fake();
