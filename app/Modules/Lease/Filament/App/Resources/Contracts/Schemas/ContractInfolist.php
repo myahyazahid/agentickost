@@ -2,14 +2,19 @@
 
 namespace App\Modules\Lease\Filament\App\Resources\Contracts\Schemas;
 
+use App\Modules\Billing\Filament\App\Resources\Invoices\InvoiceResource;
 use App\Modules\Lease\Filament\App\Resources\Contracts\ContractResource;
 use App\Modules\Lease\Models\Contract;
+use App\Modules\Lease\Models\RoomMove;
 use App\Modules\Lease\States\Contract\Notice;
 use App\Modules\Lease\States\Contract\Terminated;
 use App\Support\Money\Rupiah;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class ContractInfolist
 {
@@ -66,6 +71,60 @@ class ContractInfolist
                     TextEntry::make('ended_on')->label('Kontrak berakhir')->date('j F Y')->placeholder('-'),
                     TextEntry::make('termination_reason')->label('Alasan pemutusan')->placeholder('-')->columnSpan(2),
                     TextEntry::make('termination_penalty_amount')->label('Denda pemutusan')->formatStateUsing($money)->placeholder('Tidak ada'),
+                ]),
+            Section::make('Penyelesaian check-out')
+                ->icon(fn (Contract $record): Heroicon => $record->settlement?->isDraft() ? Heroicon::OutlinedClock : Heroicon::OutlinedCheckCircle)
+                ->columns(['default' => 2, 'md' => 3])
+                ->columnSpanFull()
+                ->visible(fn (Contract $record): bool => $record->settlement !== null)
+                ->schema([
+                    TextEntry::make('settlement.status')->label('Status')->badge(),
+                    TextEntry::make('settlement.moved_out_on')->label('Keluar')->date('j F Y'),
+                    TextEntry::make('settlement.room_after')->label('Kamar setelahnya'),
+                    TextEntry::make('settlement.outstanding_amount')->label('Tunggakan')->formatStateUsing($money),
+                    TextEntry::make('settlement.damage_amount')->label('Biaya kerusakan')->formatStateUsing($money),
+                    TextEntry::make('settlement.early_termination_amount')->label('Penalti')->formatStateUsing($money),
+                    TextEntry::make('settlement.deposit_balance_amount')->label('Deposit dipegang')->formatStateUsing($money),
+                    TextEntry::make('settlement.credit_balance_amount')->label('Saldo kredit')->formatStateUsing($money),
+                    TextEntry::make('settlement.result_amount')
+                        ->label('Hasil')
+                        ->formatStateUsing(fn (mixed $state): string => (int) $state >= 0
+                            ? 'Masih dibayar penghuni '.Rupiah::format((int) $state)
+                            : 'Dikembalikan '.Rupiah::format(-(int) $state))
+                        ->helperText(fn (Contract $record): ?string => $record->settlement?->isDraft() ? 'Perkiraan; dihitung ulang saat diselesaikan.' : null)
+                        ->weight('bold'),
+                    TextEntry::make('settlement.finalInvoice.number')
+                        ->label('Tagihan akhir')
+                        ->url(fn (Contract $record): ?string => $record->settlement?->final_invoice_id === null
+                            ? null
+                            : InvoiceResource::getUrl('view', ['record' => $record->settlement->final_invoice_id]))
+                        ->placeholder('-'),
+                ]),
+            Section::make('Riwayat pindah kamar')
+                ->columnSpanFull()
+                ->visible(fn (Contract $record): bool => $record->roomMoves()->exists())
+                ->schema([
+                    RepeatableEntry::make('roomMoves')
+                        ->hiddenLabel()
+                        ->table([
+                            TableColumn::make('Tanggal'),
+                            TableColumn::make('Kamar'),
+                            TableColumn::make('Sewa'),
+                            TableColumn::make('Tagihan'),
+                        ])
+                        ->schema([
+                            TextEntry::make('moved_on')->label('Tanggal')->date('j M Y'),
+                            TextEntry::make('rooms')
+                                ->label('Kamar')
+                                ->state(fn (RoomMove $record): string => "{$record->fromRoom?->number} ke {$record->toRoom?->number}"),
+                            TextEntry::make('rent')
+                                ->label('Sewa')
+                                ->state(fn (RoomMove $record): string => Rupiah::format($record->old_rent_amount).' ke '.Rupiah::format($record->new_rent_amount)),
+                            TextEntry::make('invoice.number')
+                                ->label('Tagihan')
+                                ->url(fn (RoomMove $record): ?string => $record->invoice_id === null ? null : InvoiceResource::getUrl('view', ['record' => $record->invoice_id]))
+                                ->placeholder('-'),
+                        ]),
                 ]),
             Section::make('Perpanjangan')
                 ->columns(2)

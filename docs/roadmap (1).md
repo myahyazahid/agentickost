@@ -189,12 +189,12 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.5 Jurnal Otomatis — `ACC` (P0)
 
-- [ ] Bagan akun bawaan dan akun tambahan per tenant (FR-ACC-01)
-- [ ] Listener jurnal untuk setiap peristiwa di PRD §8.14, dalam transaksi yang sama (FR-ACC-02)
-- [ ] Test keseimbangan: setiap jurnal total debit sama dengan total kredit (NFR-QA-02)
-- [ ] Pencatatan pengeluaran per properti (FR-ACC-03)
-- [ ] Multi akun kas/bank (FR-ACC-04)
-- [ ] Buku besar sederhana per akun untuk verifikasi
+- [x] Bagan akun bawaan dan akun tambahan per tenant (FR-ACC-01)
+- [x] Listener jurnal untuk setiap peristiwa di PRD §8.14, dalam transaksi yang sama (FR-ACC-02): DP booking dan saldo awal menyusul bersama booking (M2.1) dan onboarding (M1.8)
+- [x] Test keseimbangan: setiap jurnal total debit sama dengan total kredit (NFR-QA-02)
+- [x] Pencatatan pengeluaran per properti (FR-ACC-03)
+- [x] Multi akun kas/bank (FR-ACC-04)
+- [x] Buku besar sederhana per akun untuk verifikasi
 
 **Kriteria selesai:** satu siklus lengkap (tagihan, bayar, deposit, pengeluaran) menghasilkan buku besar yang seimbang dan cocok dengan saldo kas.
 

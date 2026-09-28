@@ -38,4 +38,21 @@ final class ContractPolicy
     {
         return $this->update($user, $contract);
     }
+
+    /**
+     * Record check-in and check-out inspections (FR-SIK-01, FR-SIK-04).
+     */
+    public function inspect(User $user, Contract $contract): bool
+    {
+        return $user->can(LeasePermission::InspectRooms->value) && $contract->isAccessibleBy($user);
+    }
+
+    /**
+     * Settle a check-out: bill, use deposit and credit, pay back the rest
+     * (FR-SIK-05).
+     */
+    public function finalizeSettlement(User $user, Contract $contract): bool
+    {
+        return $user->can(LeasePermission::FinalizeSettlements->value) && $contract->isAccessibleBy($user);
+    }
 }

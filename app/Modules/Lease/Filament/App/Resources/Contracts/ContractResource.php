@@ -9,6 +9,7 @@ use App\Modules\Lease\Filament\App\Resources\Contracts\Pages\EditDraftContract;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Pages\ListContracts;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Pages\ViewContract;
 use App\Modules\Lease\Filament\App\Resources\Contracts\RelationManagers\HoldsRelationManager;
+use App\Modules\Lease\Filament\App\Resources\Contracts\RelationManagers\InspectionsRelationManager;
 use App\Modules\Lease\Filament\App\Resources\Contracts\RelationManagers\OccupantsRelationManager;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Schemas\ContractForm;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Schemas\ContractInfolist;
@@ -71,6 +72,7 @@ class ContractResource extends Resource
     {
         return [
             OccupantsRelationManager::class,
+            InspectionsRelationManager::class,
             HoldsRelationManager::class,
             DepositTransactionsRelationManager::class,
             CreditTransactionsRelationManager::class,

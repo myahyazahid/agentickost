@@ -24,7 +24,8 @@ use UnitEnum;
 
 /**
  * Cash each staff member holds per property (FR-PAY-07): cash received,
- * less what was handed over. Staff see their own; the owner sees everyone.
+ * less what was handed over and what was spent from it. Staff see their
+ * own; the owner sees everyone.
  */
 class StaffCashBalances extends Page implements HasTable
 {
@@ -73,6 +74,7 @@ class StaffCashBalances extends Page implements HasTable
                     ->description(fn (array $record): string => $record['property']),
                 MoneyColumn::make('received')->label('Tunai diterima'),
                 MoneyColumn::make('handed_over')->label('Sudah disetor'),
+                MoneyColumn::make('spent')->label('Dipakai untuk pengeluaran'),
                 MoneyColumn::make('balance')
                     ->label('Masih dipegang')
                     ->weight('bold')
@@ -84,7 +86,7 @@ class StaffCashBalances extends Page implements HasTable
     }
 
     /**
-     * @return array<string, array{staff: string, property: string, received: int, handed_over: int, balance: int}>
+     * @return array<string, array{staff: string, property: string, received: int, handed_over: int, spent: int, balance: int}>
      */
     private static function rows(): array
     {
@@ -107,13 +109,15 @@ class StaffCashBalances extends Page implements HasTable
 
             $received = StaffCash::received($staff->id, $assignment->property_id);
             $handedOver = StaffCash::handedOver($staff->id, $assignment->property_id);
+            $spent = StaffCash::spent($staff->id, $assignment->property_id);
 
             $rows[$assignment->id] = [
                 'staff' => $staff->name,
                 'property' => $assignment->property->name ?? '-',
                 'received' => $received,
                 'handed_over' => $handedOver,
-                'balance' => $received - $handedOver,
+                'spent' => $spent,
+                'balance' => $received - $handedOver - $spent,
             ];
         }
 

@@ -69,6 +69,40 @@ final class RentInvoiceGenerator
     }
 
     /**
+     * Periods not billed yet that start on or before a date, whatever their
+     * issue date. A room move or check-out bills these right away.
+     *
+     * @return list<BillingPeriod>
+     */
+    public function periodsStartingBy(Contract $contract, CarbonImmutable $date): array
+    {
+        $schedule = $this->schedule($contract);
+        $start = $this->cursor->nextPeriodStart($contract);
+        $periods = [];
+
+        while (count($periods) < self::MAX_PERIODS_PER_RUN && $start->lessThanOrEqualTo($date)) {
+            $period = $schedule->periodStartingAt($start);
+
+            if ($period === null) {
+                break;
+            }
+
+            $periods[] = $period;
+            $start = $period->end->addDay();
+        }
+
+        return $periods;
+    }
+
+    /**
+     * The contract's billing period that starts on a date, as scheduled now.
+     */
+    public function periodAt(Contract $contract, CarbonImmutable $start): ?BillingPeriod
+    {
+        return $this->schedule($contract)->periodStartingAt($start);
+    }
+
+    /**
      * What will be billed up to a date, without writing anything. The deposit
      * and the readings taken so far go on the first upcoming invoice.
      *

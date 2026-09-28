@@ -13,13 +13,16 @@ enum LeasePermission: string implements DefinesPermissions
     case FlagResidents = 'resident.flag';
     case ViewContracts = 'contract.view';
     case ManageContracts = 'contract.manage';
+    case InspectRooms = 'contract.inspect';
+    case FinalizeSettlements = 'settlement.finalize';
 
     public function defaultRoles(): array
     {
         return match ($this) {
             self::ViewResidents, self::ViewContracts => Role::staff(),
-            self::ManageResidents => [Role::Owner, Role::Manager, Role::Caretaker],
+            self::ManageResidents, self::InspectRooms => [Role::Owner, Role::Manager, Role::Caretaker],
             self::ViewIdentity, self::FlagResidents, self::ManageContracts => [Role::Owner, Role::Manager],
+            self::FinalizeSettlements => [Role::Owner],
         };
     }
 }

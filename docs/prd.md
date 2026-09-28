@@ -454,12 +454,16 @@ nominal_prorata = harga_periode × (jumlah_hari_ditagih / jumlah_hari_basis)
 4. Jika deposit kamar baru berbeda, selisihnya ditagih atau dikembalikan ke saldo deposit.
 5. Harga kamar baru mengikuti harga berlaku saat pindah, kecuali owner menetapkan lain.
 
+Pindah kamar hanya ke kamar tersedia di properti yang sama, untuk kontrak aktif tanpa draf perpanjangan. Deposit kamar baru yang lebih kecil tidak dikembalikan otomatis: kelebihannya tetap dipegang sampai check-out atau dikembalikan owner dari tab Deposit.
+
 ### 8.9 Check-out
 
 - Notice period default 30 hari; keluar tanpa notice cukup dapat dikenai penalti sesuai klausul.
 - Penyelesaian akhir = tunggakan + denda + biaya kerusakan + penalti − saldo deposit − saldo kredit.
 - Hasil positif menjadi tagihan akhir; hasil negatif menjadi refund.
 - Kamar berpindah ke status maintenance atau tersedia setelah check-out diselesaikan.
+- Check-out dilakukan setelah pemberitahuan keluar, pemutusan, atau tanggal selesai kontrak; sewa ditagih sampai hari terakhir itu. Penalti diusulkan dari kontrak bila pemberitahuan lebih pendek dari masa pemberitahuan properti, dan owner bisa mengubahnya saat menyelesaikan.
+- Deposit yang ditagih tapi belum dibayar tidak lagi ditagih saat check-out. Saldo kredit dipakai lebih dulu, lalu deposit, untuk tagihan tertua.
 
 ### 8.10 Koreksi dokumen keuangan
 
@@ -502,6 +506,12 @@ nominal_prorata = harga_periode × (jumlah_hari_ditagih / jumlah_hari_basis)
 | Pengeluaran | Beban terkait | Kas/Bank |
 | Setoran staf | Kas/Bank | Kas di tangan staf |
 | Saldo awal | Sesuai akun | Ekuitas Saldo Awal |
+
+- Bagian deposit di tagihan tidak dijurnal saat tagihan terbit. Deposit baru dicatat ke Utang Deposit Penghuni saat dibayar, sehingga saldo akun itu selalu sama dengan ledger deposit.
+- Saldo kredit yang dipakai untuk tagihan: Saldo Kredit Penghuni / Piutang Penghuni. Pemakaian yang ditarik kembali, atau pembayaran yang dilepas karena nota kredit, dijurnal sebaliknya.
+- Denda yang terhitung: Piutang Penghuni / Pendapatan Denda; denda yang dihapus dijurnal balik.
+- Selisih setoran staf: kekurangan dicatat ke Beban Lain-lain, kelebihan ke Pendapatan Lain-lain, dengan penjelasan di setoran.
+- Pembayaran yang dibalik dan pengeluaran yang dibatalkan dijurnal balik dengan jumlah yang masih berlaku saat itu.
 
 ---
 

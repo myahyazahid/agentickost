@@ -155,6 +155,30 @@ class Contract extends Model
         return $this->hasMany(CreditTransaction::class);
     }
 
+    /**
+     * @return HasMany<RoomMove, $this>
+     */
+    public function roomMoves(): HasMany
+    {
+        return $this->hasMany(RoomMove::class)->orderBy('moved_on');
+    }
+
+    /**
+     * @return HasMany<Inspection, $this>
+     */
+    public function inspections(): HasMany
+    {
+        return $this->hasMany(Inspection::class);
+    }
+
+    /**
+     * @return HasOne<Settlement, $this>
+     */
+    public function settlement(): HasOne
+    {
+        return $this->hasOne(Settlement::class);
+    }
+
     public function primaryResident(): ?Resident
     {
         return $this->residents()->wherePivot('is_primary', true)->first();

@@ -13,6 +13,7 @@ use App\Modules\Lease\Actions\UpdateContractPayer;
 use App\Modules\Lease\Enums\PayerRelation;
 use App\Modules\Lease\Filament\App\Resources\Contracts\ContractResource;
 use App\Modules\Lease\Filament\App\Resources\Contracts\Schemas\ContractForm;
+use App\Modules\Lease\Filament\App\Resources\Contracts\Schemas\StayActions;
 use App\Modules\Lease\Models\Contract;
 use App\Modules\Lease\States\Contract\Active;
 use App\Modules\Lease\States\Contract\Completed;
@@ -52,11 +53,18 @@ class ViewContract extends ViewRecord
 
     protected function getHeaderActions(): array
     {
+        $contract = fn (): Contract => $this->getRecord();
+        $run = fn (Action $action, \Closure $callback, string $success) => $this->run($action, $callback, $success);
+
         return [
+            StayActions::checkIn($contract, $run),
             $this->activateAction(),
             $this->giveNoticeAction(),
+            StayActions::checkOut($contract, $run),
+            StayActions::finalizeSettlement($contract, $run),
             $this->renewAction(),
             ActionGroup::make([
+                StayActions::moveRoom($contract, $run),
                 Action::make('editDraft')
                     ->label('Ubah draf')
                     ->icon(Heroicon::OutlinedPencilSquare)
@@ -98,7 +106,10 @@ class ViewContract extends ViewRecord
             ->visible(fn (): bool => $this->getRecord()->status->equals(Active::class) && $this->canManage())
             ->schema([
                 DatePicker::make('notice_given_on')->label('Diberitahukan pada')->default(now())->maxDate(now())->required(),
-                DatePicker::make('planned_move_out_on')->label('Rencana tanggal keluar')->required(),
+                DatePicker::make('planned_move_out_on')
+                    ->label('Rencana tanggal keluar')
+                    ->helperText(fn (): string => 'Masa pemberitahuan properti ini '.$this->getRecord()->property()->firstOrFail()->resolvedSettings()->notice_days.' hari. Bila kurang, penalti kontrak diusulkan saat check-out.')
+                    ->required(),
             ])
             ->action(fn (Action $action, array $data) => $this->run($action, fn () => app(GiveNotice::class)->handle($this->getRecord(), $data), 'Rencana keluar dicatat'));
     }

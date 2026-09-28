@@ -558,10 +558,13 @@ Riwayat pindah kamar (FR-SIK-02, PRD §8.8). `contracts.room_id` selalu menunjuk
 | `old_rent_amount` | `BIGINT` | |
 | `new_rent_amount` | `BIGINT` | |
 | `deposit_difference_amount` | `BIGINT` | Boleh negatif |
-| `credit_note_id` | `CHAR(26)` NULL | Kredit sisa periode kamar lama |
-| `invoice_id` | `CHAR(26)` NULL | Tagihan prorata kamar baru |
+| `invoice_id` | `CHAR(26)` NULL | Tagihan prorata kamar baru, bertipe `adhoc` |
 | `notes` | `TEXT` NULL | |
 | `created_by` | `CHAR(26)` | |
+
+Indeks: `INDEX(tenant_id, contract_id, moved_on)`, `INDEX(tenant_id, to_room_id)`.
+
+Satu pindah kamar bisa mengkredit lebih dari satu tagihan (periode tempat tanggal pindah jatuh, dan periode berikutnya yang sudah terbit), jadi nota kreditnya menunjuk balik lewat `credit_notes.room_move_id`. Urutannya: periode yang dimulai sampai tanggal pindah ditagih dulu dengan kamar lama; sewa kamar lama mulai tanggal pindah dikredit (bila sudah dibayar menjadi saldo kredit); kamar baru ditagih prorata untuk hari yang sama, ditambah selisih deposit bila lebih besar dan meteran terakhir kamar lama. Deposit kamar baru yang lebih kecil tidak dikembalikan otomatis; kelebihannya tetap dipegang sampai check-out atau refund. Meteran kamar baru dihitung dari tanggal pindah.
 
 ### 6.7 `inspections` 🏠 — P0
 
@@ -575,6 +578,8 @@ Riwayat pindah kamar (FR-SIK-02, PRD §8.8). `contracts.room_id` selalu menunjuk
 | `resident_acknowledged_at` | `TIMESTAMP` NULL | FR-SIK-01 |
 | `notes` | `TEXT` NULL | |
 
+Indeks: `UNIQUE(tenant_id, contract_id, type)`: satu check-in dan satu check-out per kontrak. Foto di `attachments` dengan `collection = 'inspection'`.
+
 ### 6.8 `inspection_items` 🏠 — P0
 
 | Kolom | Tipe | Keterangan |
@@ -585,6 +590,7 @@ Riwayat pindah kamar (FR-SIK-02, PRD §8.8). `contracts.room_id` selalu menunjuk
 | `condition` | `VARCHAR(16)` | `good`, `fair`, `damaged`, `missing` |
 | `charge_amount` | `BIGINT` | Default 0; biaya kerusakan |
 | `notes` | `TEXT` NULL | |
+| `sort_order` | `SMALLINT` | Urutan di checklist |
 
 ### 6.9 `settlements` 🏠 — P0
 
@@ -593,16 +599,22 @@ Penyelesaian akhir check-out (FR-SIK-05, PRD §8.9).
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | `contract_id` | `CHAR(26)` | FK, unik |
+| `inspection_id` | `CHAR(26)` | FK `inspections`, pemeriksaan check-out |
 | `status` | `VARCHAR(16)` | `draft`, `finalized` |
+| `moved_out_on` | `DATE` | Tanggal penghuni keluar |
+| `room_after` | `VARCHAR(16)` | `available`, `maintenance` (PRD §8.9) |
 | `outstanding_amount` | `BIGINT` | Tunggakan termasuk denda |
 | `damage_amount` | `BIGINT` | Dari `inspection_items` |
 | `early_termination_amount` | `BIGINT` | |
 | `deposit_balance_amount` | `BIGINT` | Saldo deposit saat penyelesaian |
 | `credit_balance_amount` | `BIGINT` | Saldo kredit saat penyelesaian |
 | `result_amount` | `BIGINT` | Positif = ditagih, negatif = dikembalikan |
-| `final_invoice_id` | `CHAR(26)` NULL | Jika `result_amount` > 0 |
+| `final_invoice_id` | `CHAR(26)` NULL | Tagihan `final_settlement`: kerusakan, penalti, meteran terakhir |
+| `refund_account_id` | `CHAR(26)` NULL | FK `accounts`; asal pengembalian bila ada |
 | `finalized_by` | `CHAR(26)` NULL | |
 | `finalized_at` | `TIMESTAMP` NULL | |
+
+Draf dibuat saat check-out dicatat, dengan angka perkiraan. Saat difinalkan owner, dalam satu transaksi: sewa ditagih sampai hari terakhir sewa (rencana keluar, tanggal putus, atau tanggal selesai kontrak); deposit yang ditagih tapi belum dibayar dikredit; tagihan akhir terbit; saldo kredit lalu deposit melunasi tagihan terbuka mulai yang tertua; sisa deposit dan saldo kredit dikembalikan dari `refund_account_id`; yang masih kurang tetap di tagihan terbuka. Angka akhir dihitung ulang saat itu. Kontrak `notice` atau `active` menjadi `completed`; kontrak `terminated` tetap. `deposit_transactions.settlement_id` mendapat foreign key di migration tabel ini.
 
 ---
 
@@ -760,6 +772,7 @@ Indeks: `UNIQUE(tenant_id, invoice_id, accrued_on)` — job denda aman dijalanka
 | `reason` | `TEXT` | Wajib |
 | `issued_on` | `DATE` | |
 | `created_by` | `CHAR(26)` | |
+| `room_move_id` | `CHAR(26)` NULL | FK `room_moves`; nota kredit sisa sewa kamar lama (PRD §8.8) |
 
 Indeks: `UNIQUE(tenant_id, number)`, `INDEX(tenant_id, invoice_id)`.
 
@@ -988,6 +1001,8 @@ Indeks: `UNIQUE(tenant_id, code)`, `INDEX(tenant_id, subtype)`, `UNIQUE(tenant_i
 
 Indeks: `UNIQUE(tenant_id, year, month)`.
 
+Periode dibuat terbuka saat jurnal pertama bertanggal di bulan itu. Menutup dan membuka ulang periode dikerjakan bersama FR-ACC-08 (M1.5.5).
+
 ### 10.3 `journal_entries` 🏠 — P0
 
 Tidak dapat diubah atau dihapus. Koreksi dengan entri pembalikan.
@@ -998,7 +1013,7 @@ Tidak dapat diubah atau dihapus. Koreksi dengan entri pembalikan.
 | `property_id` | `CHAR(26)` NULL | |
 | `number` | `VARCHAR(40)` | |
 | `entry_date` | `DATE` | |
-| `event` | `VARCHAR(40)` | Contoh `invoice_issued`, `payment_verified`, `deposit_deducted` (PRD §8.14) |
+| `event` | `VARCHAR(40)` | `invoice_issued`, `invoice_voided`, `penalty_accrued`, `penalty_waived`, `credit_note_issued`, `payment_verified`, `payment_reversed`, `credit_applied`, `allocation_released`, `deposit_deducted`, `deposit_refunded`, `deposit_transferred`, `cash_handed_over`, `expense_recorded`, `expense_voided` (PRD §8.14) |
 | `description` | `VARCHAR(255)` | |
 | `source_type` | `VARCHAR(80)` NULL | Polymorphic ke dokumen sumber |
 | `source_id` | `CHAR(26)` NULL | |
@@ -1006,7 +1021,9 @@ Tidak dapat diubah atau dihapus. Koreksi dengan entri pembalikan.
 | `created_by_type` | `VARCHAR(32)` | |
 | `created_by_id` | `CHAR(26)` NULL | |
 
-Tanpa `updated_at`. Indeks: `UNIQUE(tenant_id, number)`, `INDEX(tenant_id, entry_date)`, `INDEX(tenant_id, source_type, source_id)`.
+Tanpa `updated_at`. Indeks: `UNIQUE(tenant_id, number)`, `UNIQUE(tenant_id, reversal_of_id)` (satu jurnal hanya dibalik sekali), `INDEX(tenant_id, entry_date)`, `INDEX(tenant_id, source_type, source_id)`.
+
+Jurnal dibuat oleh listener di modul Finance, di transaksi yang sama dengan peristiwanya (FR-ACC-02). Baris pada akun, kontrak, dan properti yang sama digabung lebih dulu; jurnal yang total debit dan kreditnya berbeda ditolak.
 
 ### 10.4 `journal_lines` 🏠 — P0
 
@@ -1020,6 +1037,7 @@ Tanpa `updated_at`. Indeks: `UNIQUE(tenant_id, number)`, `INDEX(tenant_id, entry
 | `credit_amount` | `BIGINT` | Default 0, `CHECK >= 0` |
 | `memo` | `VARCHAR(255)` NULL | |
 
+Tanpa `updated_at`; baris tidak pernah diubah.
 Constraint: `CHECK ((debit_amount = 0) <> (credit_amount = 0))` — satu baris hanya debit atau hanya kredit.
 Indeks: `INDEX(tenant_id, account_id, journal_entry_id)`, `INDEX(tenant_id, contract_id)`.
 
@@ -1066,7 +1084,9 @@ Refund tidak boleh membuat saldo negatif (FR-DEP-03); dicek dengan mengunci bari
 | `void_reason` | `TEXT` NULL | |
 | `created_by` | `CHAR(26)` | |
 
-Indeks: `INDEX(tenant_id, property_id, spent_on)`.
+Indeks: `INDEX(tenant_id, property_id, spent_on)`, `INDEX(tenant_id, paid_from_account_id)`.
+
+Pengeluaran tidak diubah atau dihapus; yang salah dibatalkan dengan alasan dan jurnalnya dibalik. Owner dan manajer membayar dari kas atau rekening; staf yang memegang kas juga bisa membayar dari kas di tangannya sendiri, sehingga jumlah yang harus disetor berkurang.
 
 ### 10.7 `opening_balances` 🏠 — P0
 
@@ -1396,7 +1416,7 @@ Catatan: kolom FK yang menunjuk tabel dari urutan lebih akhir (misal `payments.b
 
 ## 16. Keputusan Terbuka
 
-1. **Deposit di tagihan pertama.** Skema ini menagih deposit sebagai `invoice_items.type = 'deposit'` dan jurnalnya Piutang / Utang Deposit saat terbit. Urutan alokasi default di PRD §8.5 belum menyebut deposit; usulan: deposit dialokasikan paling awal. Perlu diputuskan dan PRD diperbarui.
+1. **Deposit di tagihan pertama.** Diputuskan: deposit ditagih sebagai `invoice_items.type = 'deposit'` dan dialokasikan paling awal (ADR 0008). Jurnalnya tidak dibuat saat terbit, melainkan saat dibayar (Kas/Bank / Utang Deposit, PRD §8.14), agar akun Utang Deposit selalu sama dengan ledger deposit. Konsekuensinya, deposit yang sudah ditagih tapi belum dibayar tidak tampil di akun Piutang.
 2. **Email user unik global.** Konsekuensinya satu orang tidak bisa menjadi staf di dua tenant dengan email yang sama. Diterima untuk MVP.
 3. **Penghuni sebagai entitas login.** Jika satu nomor menjadi penghuni di dua tenant, login portal dibedakan lewat slug tenant di URL.
 4. **Tagihan terpisah per penghuni** (`split_billing`) menambah kompleksitas alokasi dan deposit per orang. Perlu dikonfirmasi dari wawancara apakah fitur ini benar-benar dibutuhkan di MVP.

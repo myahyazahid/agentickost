@@ -79,7 +79,7 @@ final class ReversePayment extends Action
                 $this->credit->applyToOpenInvoices($contract);
             }
 
-            PaymentReversed::dispatch($payment);
+            PaymentReversed::dispatch($payment, array_values($allocations->all()), max(0, $credited));
 
             return $payment;
         });

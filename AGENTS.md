@@ -20,7 +20,7 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 ## Struktur
 
 - Modul domain di `app/Modules/{Nama}/` dengan `{Nama}ServiceProvider` (terdaftar otomatis). Isi umum: `Actions/`, `Models/`, `Enums/`, `Policies/`, `Database/Migrations/`, `Database/Factories/`, `Filament/App|Admin/`. Kode lintas modul tanpa domain di `app/Support/`.
-- Modul saat ini: `Tenancy` (tenant, konteks tenant, super admin), `Access` (user, peran, audit log), `Documents` (lampiran, penomoran dokumen), `Property` (properti, kamar, harga, pengaturan), `Lease` (penghuni, pembayar, kontrak), `Billing` (tagihan, denda, nota kredit, tarif utilitas, meteran), `Payment` (pembayaran, alokasi, saldo kredit, kas staf, kuitansi), `Finance` (akun, rekening tujuan, ledger deposit).
+- Modul saat ini: `Tenancy` (tenant, konteks tenant, super admin), `Access` (user, peran, audit log), `Documents` (lampiran, penomoran dokumen), `Property` (properti, kamar, harga, pengaturan), `Lease` (penghuni, pembayar, kontrak), `Billing` (tagihan, denda, nota kredit, tarif utilitas, meteran), `Payment` (pembayaran, alokasi, saldo kredit, kas staf, kuitansi), `Finance` (akun, rekening tujuan, ledger deposit, jurnal otomatis, pengeluaran).
 - Modul boleh membaca model modul lain, tetapi menulis lewat Action modul pemiliknya. Contoh: Billing memajukan kursor tagihan kontrak lewat `Lease\Support\BillingCursor`; Payment mengubah `paid_amount` tagihan lewat `Billing\Support\InvoicePayments` dan menulis ledger deposit lewat `Finance\Support\DepositLedger`.
 - Panel Filament `app` di `/app` untuk owner dan staf (guard `web`), panel `admin` di `/admin` untuk super admin (guard `platform`, model `PlatformAdmin`).
 
@@ -33,6 +33,7 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 - Tanggal bisnis (jatuh tempo, periode, telat) dibandingkan dengan `Property::today()`, bukan `now()`, supaya mengikuti zona waktu properti.
 - Nominal uang memakai cast `RupiahCast` dan ditampilkan dengan `Rupiah::format()`.
 - Status domain memakai `spatie/laravel-model-states` + `EnforcesStateTransitions`.
+- Peristiwa keuangan baru memancarkan event; jurnalnya dibuat subscriber di `Finance/Listeners/*Journals.php` lewat `JournalPoster`, bukan oleh modul asal.
 
 ## Lingkungan lokal
 

@@ -7,7 +7,9 @@ use App\Modules\Lease\Models\Contract;
 use App\Modules\Payment\Engine\AllocationLine;
 use App\Modules\Payment\Engine\PaymentAllocator;
 use App\Modules\Payment\Enums\CreditTransactionType;
+use App\Modules\Payment\Events\AllocationReleased;
 use App\Modules\Payment\Events\CreditApplied;
+use App\Modules\Payment\Events\CreditRefunded;
 use App\Modules\Payment\Models\CreditTransaction;
 use App\Modules\Payment\Models\PaymentAllocation;
 use App\Support\Actors\ActorContext;
@@ -81,6 +83,19 @@ final class CreditLedger
     }
 
     /**
+     * Pays credit back to the resident from a cash or bank account, as at
+     * check-out.
+     */
+    public function refund(Contract $contract, int $amount, string $accountId): CreditTransaction
+    {
+        $entry = $this->record($contract, CreditTransactionType::Refunded, -$amount);
+
+        CreditRefunded::dispatch($entry, $accountId);
+
+        return $entry;
+    }
+
+    /**
      * Takes back credit already spent on invoices, newest first, until the
      * balance covers $needed. Those invoices owe the amount again.
      */
@@ -97,6 +112,8 @@ final class CreditLedger
 
             $this->writer->reverse($contract, $allocation, $invoice);
             $this->record($contract, CreditTransactionType::Reversal, $allocation->amount, ['invoice_id' => $invoice->id]);
+
+            AllocationReleased::dispatch($allocation, $allocation->amount);
         }
     }
 }

@@ -12,6 +12,7 @@ use App\Modules\Billing\Models\InvoiceItem;
 use App\Modules\Billing\Models\MeterReading;
 use App\Modules\Billing\Models\UtilityRate;
 use App\Modules\Lease\Models\Contract;
+use App\Modules\Lease\Models\RoomMove;
 use Carbon\CarbonImmutable;
 
 /**
@@ -26,7 +27,26 @@ final class UtilityCharges
      */
     public function addTo(Invoice $invoice, Contract $contract, BillingPeriod $period, CarbonImmutable $upTo, int $sortOrder): int
     {
-        foreach ($this->lines($contract, $period, $upTo) as $line) {
+        return $this->write($invoice, $this->lines($contract, $period, $upTo), $sortOrder);
+    }
+
+    /**
+     * Only the unbilled readings of the contract's current room, such as the
+     * last readings of a room being left.
+     *
+     * @return int the next sort order
+     */
+    public function addReadingsTo(Invoice $invoice, Contract $contract, CarbonImmutable $upTo, int $sortOrder): int
+    {
+        return $this->write($invoice, $this->readingLines($contract, $upTo), $sortOrder);
+    }
+
+    /**
+     * @param  list<UtilityLine>  $lines
+     */
+    private function write(Invoice $invoice, array $lines, int $sortOrder): int
+    {
+        foreach ($lines as $line) {
             $item = InvoiceItem::create([
                 ...$line->attributes,
                 'invoice_id' => $invoice->id,
@@ -46,9 +66,25 @@ final class UtilityCharges
      */
     public function lines(Contract $contract, BillingPeriod $period, CarbonImmutable $upTo, bool $withReadings = true): array
     {
+        $lines = $withReadings ? $this->readingLines($contract, $upTo) : [];
+
+        if (! $contract->rental_period->isMonthBased()) {
+            return $lines;
+        }
+
+        return [...$lines, ...$this->flatFeeLines($contract, $period)];
+    }
+
+    /**
+     * Lines for the unbilled readings of the contract's current room.
+     *
+     * @return list<UtilityLine>
+     */
+    public function readingLines(Contract $contract, CarbonImmutable $upTo): array
+    {
         $lines = [];
 
-        foreach ($withReadings ? $this->unbilledReadings($contract, $upTo) : [] as $reading) {
+        foreach ($this->unbilledReadings($contract, $upTo) as $reading) {
             $lines[] = new UtilityLine([
                 'type' => InvoiceItemType::Utility,
                 'allocation_category' => InvoiceItemType::Utility->allocationCategory(),
@@ -67,9 +103,15 @@ final class UtilityCharges
             ], $reading);
         }
 
-        if (! $contract->rental_period->isMonthBased()) {
-            return $lines;
-        }
+        return $lines;
+    }
+
+    /**
+     * @return list<UtilityLine>
+     */
+    private function flatFeeLines(Contract $contract, BillingPeriod $period): array
+    {
+        $lines = [];
 
         foreach (UtilityKind::cases() as $utility) {
             $rate = UtilityRate::inForce($contract->property_id, $utility, $period->start);
@@ -98,9 +140,10 @@ final class UtilityCharges
     }
 
     /**
-     * Readings taken after the resident moved in, so a reading on move-in day
-     * (the previous resident's last one) is never billed to them. Renewals
-     * count from the first contract of the chain.
+     * Readings taken after the resident moved into the room, so a reading on
+     * move-in day (the previous resident's last one) is never billed to them.
+     * Renewals count from the first contract of the chain; after a room move
+     * the new room counts from the move date (PRD �8.8).
      *
      * @return list<MeterReading>
      */
@@ -120,12 +163,21 @@ final class UtilityCharges
     private static function movedInOn(Contract $contract): CarbonImmutable
     {
         $first = $contract;
+        $chain = [$contract->id];
 
         while ($first->renewed_from_contract_id !== null && ($previous = $first->renewedFrom()->first()) !== null) {
             $first = $previous;
+            $chain[] = $first->id;
         }
 
-        return $first->start_date->toImmutable();
+        $movedIn = RoomMove::query()
+            ->whereIn('contract_id', $chain)
+            ->where('to_room_id', $contract->room_id)
+            ->max('moved_on');
+
+        $start = $first->start_date->toImmutable();
+
+        return is_string($movedIn) && CarbonImmutable::parse($movedIn)->greaterThan($start) ? CarbonImmutable::parse($movedIn) : $start;
     }
 
     private static function number(string $value): string

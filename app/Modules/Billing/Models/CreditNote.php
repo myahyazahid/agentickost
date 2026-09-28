@@ -27,10 +27,11 @@ use LogicException;
  * @property AllocationCategory $allocation_category
  * @property int $amount
  * @property string $reason
+ * @property string|null $room_move_id Set when the note credits a room move (PRD §8.8)
  * @property Carbon $issued_on
  * @property string|null $created_by
  */
-#[Fillable(['invoice_id', 'number', 'allocation_category', 'amount', 'reason', 'issued_on', 'created_by'])]
+#[Fillable(['invoice_id', 'room_move_id', 'number', 'allocation_category', 'amount', 'reason', 'issued_on', 'created_by'])]
 #[UseFactory(CreditNoteFactory::class)]
 class CreditNote extends Model
 {

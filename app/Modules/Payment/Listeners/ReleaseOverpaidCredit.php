@@ -11,6 +11,7 @@ use App\Modules\Finance\Support\DepositLedger;
 use App\Modules\Lease\Models\Contract;
 use App\Modules\Payment\Engine\AllocationLine;
 use App\Modules\Payment\Enums\CreditTransactionType;
+use App\Modules\Payment\Events\AllocationReleased;
 use App\Modules\Payment\Models\PaymentAllocation;
 use App\Modules\Payment\Support\AllocationWriter;
 use App\Modules\Payment\Support\CreditLedger;
@@ -66,6 +67,8 @@ final class ReleaseOverpaidCredit
 
             $this->giveBack($contract, $allocation, $released, $note);
             $excess -= $released;
+
+            AllocationReleased::dispatch($allocation, $released);
         }
     }
 
