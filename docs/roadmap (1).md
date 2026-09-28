@@ -200,11 +200,11 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.6 Check-in, Pindah Kamar, Check-out — `SIK`
 
-- [ ] Check-in dengan checklist dan foto (FR-SIK-01)
-- [ ] Pindah kamar dengan prorata dan penyesuaian deposit (FR-SIK-02, PRD §8.8)
-- [ ] Pengajuan keluar dengan notice period (FR-SIK-03)
-- [ ] Pemeriksaan check-out dan daftar kerusakan (FR-SIK-04)
-- [ ] Penyelesaian akhir: tagihan akhir atau refund (FR-SIK-05, PRD §8.9)
+- [x] Check-in dengan checklist dan foto (FR-SIK-01): persetujuan penghuni dicatat staf; konfirmasi dari penghuni sendiri menunggu portal (M1.5.3)
+- [x] Pindah kamar dengan prorata dan penyesuaian deposit (FR-SIK-02, PRD §8.8)
+- [x] Pengajuan keluar dengan notice period (FR-SIK-03): pengajuan oleh penghuni sendiri menunggu portal (M1.5.3)
+- [x] Pemeriksaan check-out dan daftar kerusakan (FR-SIK-04)
+- [x] Penyelesaian akhir: tagihan akhir atau refund (FR-SIK-05, PRD §8.9)
 
 **Kriteria selesai:** skenario pindah kamar di tengah bulan dan check-out dengan potongan deposit teruji, termasuk jurnalnya.
 
@@ -481,4 +481,4 @@ Ide dan permintaan di luar roadmap. Ditinjau di akhir setiap fase.
 
 | Tanggal | Ide / permintaan | Sumber | Keputusan |
 |---|---|---|---|
-| | | | |
+| 28 Sep 2026 | Terjemahan bahasa Indonesia untuk pesan validasi bawaan Laravel (`lang/id`); sekarang pesan seperti "The moved on field must be a date after ..." masih berbahasa Inggris (NFR-LOC-01) | Ditemukan saat M1.6 | Belum diputuskan |

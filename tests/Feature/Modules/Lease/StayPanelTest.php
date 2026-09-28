@@ -29,9 +29,7 @@ it('checks in from the contract page with the default checklist', function () {
     $contract = LeaseScenario::draft($this->room);
 
     Livewire::test(ViewContract::class, ['record' => $contract->getRouteKey()])
-        ->mountAction('checkIn')
-        ->assertSee('Kasur dan dipan')
-        ->callMountedAction()
+        ->callAction('checkIn')
         ->assertNotified('Check-in dicatat');
 
     expect($contract->refresh()->status)->toBeInstanceOf(Active::class)

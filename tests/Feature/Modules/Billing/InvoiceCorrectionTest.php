@@ -165,7 +165,7 @@ it('settles an invoice credited in full, and caps credit notes per category', fu
 
     expect(fn () => app(IssueCreditNote::class)->handle($invoice, [
         'allocation_category' => 'utility', 'amount' => 1, 'reason' => 'Tidak ada utilitas',
-    ]))->toThrow(ValidationException::class, 'paling banyak 0');
+    ]))->toThrow(ValidationException::class, 'paling banyak Rp0');
 
     app(IssueCreditNote::class)->handle($invoice, [
         'allocation_category' => 'rent', 'amount' => 1_200_000, 'reason' => 'Gratis bulan pertama',

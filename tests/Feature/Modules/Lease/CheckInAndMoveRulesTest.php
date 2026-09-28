@@ -80,8 +80,8 @@ it('keeps activating a draft contract for staff who manage contracts', function 
     app(RecordCheckIn::class)->handle($contract, checkInInput());
 })->throws(AuthorizationException::class);
 
-it('moves only to a free room of the same property, after the start date', function () {
-    $contract = LeaseScenario::active($this->room);
+it('moves only to a free room of the same property', function () {
+    $contract = LeaseScenario::active($this->room, ['start_date' => '2026-09-01']);
     $busy = Room::factory()->forType($this->room->roomType()->firstOrFail())->create(['capacity' => 1]);
     LeaseScenario::active($busy);
     $repairing = Room::factory()->forType($this->room->roomType()->firstOrFail())->create(['capacity' => 1]);

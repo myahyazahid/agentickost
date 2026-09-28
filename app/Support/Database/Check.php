@@ -18,9 +18,10 @@ final class Check
     public static function enum(string $table, string $column, string $enum, bool $nullable = false): void
     {
         $values = implode(', ', array_map(fn (BackedEnum $case): string => "'{$case->value}'", $enum::cases()));
-        $condition = "{$column} IN ({$values})";
+        $quoted = "`{$column}`";
+        $condition = "{$quoted} IN ({$values})";
 
-        self::add($table, "{$column}_check", $nullable ? "{$column} IS NULL OR {$condition}" : $condition);
+        self::add($table, "{$column}_check", $nullable ? "{$quoted} IS NULL OR {$condition}" : $condition);
     }
 
     public static function add(string $table, string $name, string $condition): void
