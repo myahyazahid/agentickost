@@ -5,8 +5,8 @@ namespace App\Modules\Finance\Actions;
 use App\Modules\Access\Models\User;
 use App\Modules\Documents\Enums\AttachmentCollection;
 use App\Modules\Documents\Support\AttachmentSync;
-use App\Modules\Finance\Events\ExpenseRecorded;
 use App\Modules\Finance\Models\Expense;
+use App\Modules\Finance\Support\Expenses;
 use App\Modules\Finance\Support\SpendingAccounts;
 use App\Modules\Property\Models\Property;
 use App\Support\Actions\Action;
@@ -25,6 +25,7 @@ final class RecordExpense extends Action
     public function __construct(
         private readonly AttachmentSync $attachments,
         private readonly ActorContext $actors,
+        private readonly Expenses $expenses,
     ) {}
 
     /**
@@ -59,20 +60,17 @@ final class RecordExpense extends Action
             throw ValidationException::withMessages(['spent_on' => 'Tanggal pengeluaran tidak boleh di masa depan.']);
         }
 
-        return $this->transaction(function () use ($property, $data, $user): Expense {
-            $expense = Expense::create([
-                'property_id' => $property->id,
-                'expense_account_id' => $data['expense_account_id'],
-                'paid_from_account_id' => $data['paid_from_account_id'],
-                'amount' => $data['amount'],
-                'spent_on' => $data['spent_on'],
-                'description' => $data['description'],
-                'created_by' => $user->id,
-            ]);
+        return $this->transaction(function () use ($property, $data): Expense {
+            $expense = $this->expenses->record(
+                $property,
+                $data['expense_account_id'],
+                $data['paid_from_account_id'],
+                (int) $data['amount'],
+                CarbonImmutable::parse($data['spent_on']),
+                $data['description'],
+            );
 
             $this->attachments->sync($expense, AttachmentCollection::Document, $data['receipts'] ?? [], 'receipts');
-
-            ExpenseRecorded::dispatch($expense);
 
             return $expense;
         });

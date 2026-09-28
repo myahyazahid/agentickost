@@ -210,11 +210,11 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.7 Maintenance — `MNT` (P0)
 
-- [ ] Tiket dengan kategori, prioritas, dan foto (FR-MNT-01)
-- [ ] State machine tiket dan penugasan (FR-MNT-02, PRD §9.5)
-- [ ] Foto sebelum dan sesudah (FR-MNT-03)
-- [ ] Biaya perbaikan menjadi pengeluaran (FR-MNT-04)
-- [ ] Biaya ditagihkan ke penghuni (FR-MNT-05)
+- [x] Tiket dengan kategori, prioritas, dan foto (FR-MNT-01): laporan dari penghuni sendiri menunggu portal (M1.5.3)
+- [x] State machine tiket dan penugasan (FR-MNT-02, PRD §9.5): penugasan ke vendor menyusul bersama data vendor (M2.2)
+- [x] Foto sebelum dan sesudah (FR-MNT-03)
+- [x] Biaya perbaikan menjadi pengeluaran (FR-MNT-04)
+- [x] Biaya ditagihkan ke penghuni (FR-MNT-05)
 
 **Kriteria selesai:** tiket dapat dibuat oleh staf, diselesaikan, dan biayanya muncul di pengeluaran atau tagihan penghuni.
 

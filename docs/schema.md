@@ -1137,12 +1137,15 @@ Tunggakan awal dibuat sebagai tagihan `adhoc` bertanggal cut-off agar bisa dialo
 | `resolved_at` | `TIMESTAMP` NULL | |
 | `confirmed_at` | `TIMESTAMP` NULL | |
 | `cost_amount` | `BIGINT` | Default 0 |
+| `paid_from_account_id` | `CHAR(26)` NULL | FK `accounts`; kas, rekening, atau kas di tangan staf yang membayar. Wajib bila `cost_amount` > 0 |
 | `charge_to_resident` | `BOOLEAN` | FR-MNT-05 |
 | `charge_invoice_id` | `CHAR(26)` NULL | |
 | `expense_id` | `CHAR(26)` NULL | |
 | `maintenance_schedule_id` | `CHAR(26)` NULL | Jika dibuat dari jadwal rutin |
 
-Indeks: `INDEX(tenant_id, property_id, status)`, `INDEX(tenant_id, assigned_user_id, status)`.
+Indeks: `INDEX(tenant_id, property_id, status)`, `INDEX(tenant_id, assigned_user_id, status)`, `INDEX(tenant_id, room_id)`.
+
+Biaya dicatat saat perbaikan dilaporkan selesai, lalu dibukukan saat owner atau manajer mengonfirmasi: menjadi `expenses` dengan akun beban perbaikan dan `ticket_id` terisi (FR-MNT-04), dan bila `charge_to_resident`, tagihan ad-hoc berbaris `damage` ke kontrak yang sedang berjalan di kamar itu (FR-MNT-05). Foto sebelum dan sesudah di `attachments` dengan `collection` `before` dan `after`. `expenses.ticket_id` mendapat foreign key di migration tabel ini.
 
 ### 11.2 `ticket_updates` 🏠 — P0
 

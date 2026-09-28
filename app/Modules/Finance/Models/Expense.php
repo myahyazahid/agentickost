@@ -26,6 +26,7 @@ use LogicException;
  * @property string $property_id
  * @property string $expense_account_id
  * @property string $paid_from_account_id
+ * @property string|null $ticket_id Set when a maintenance ticket caused the expense (FR-MNT-04)
  * @property int $amount
  * @property Carbon $spent_on
  * @property string $description
@@ -33,7 +34,7 @@ use LogicException;
  * @property string|null $void_reason
  * @property string|null $created_by
  */
-#[Fillable(['property_id', 'expense_account_id', 'paid_from_account_id', 'amount', 'spent_on', 'description', 'created_by'])]
+#[Fillable(['property_id', 'expense_account_id', 'paid_from_account_id', 'ticket_id', 'amount', 'spent_on', 'description', 'created_by'])]
 #[UseFactory(ExpenseFactory::class)]
 class Expense extends Model
 {
