@@ -4,11 +4,16 @@ namespace App\Providers;
 
 use App\Support\Actors\Actor;
 use App\Support\Actors\ActorContext;
+use App\Support\Backup\Commands\BackupBinaryLogs;
+use App\Support\Backup\Commands\BackupDatabase;
+use App\Support\Backup\Commands\TestRestore;
+use App\Support\Backup\MysqlClient;
 use App\Support\Modules\ModuleRegistry;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Log\Context\Repository;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
         foreach (ModuleRegistry::providers() as $provider) {
             $this->app->register($provider);
         }
+
+        $this->app->singleton(MysqlClient::class, fn (): MysqlClient => MysqlClient::fromConfig());
     }
 
     /**
@@ -32,6 +39,16 @@ class AppServiceProvider extends ServiceProvider
             ->native(false)
             ->displayFormat('j M Y')
             ->firstDayOfWeek(1));
+
+        // Staging and production refuse weak and leaked passwords; local
+        // development and tests keep the plain minimum.
+        Password::defaults(fn (): Password => $this->app->environment('local', 'testing')
+            ? Password::min(8)
+            : Password::min(8)->letters()->numbers()->uncompromised());
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([BackupDatabase::class, BackupBinaryLogs::class, TestRestore::class]);
+        }
 
         Context::hydrated(function (Repository $context): void {
             $actors = $this->app->make(ActorContext::class);

@@ -8,12 +8,14 @@ use App\Modules\Billing\States\Invoice\InvoiceState;
 use App\Modules\Tenancy\TenantContext;
 use App\Support\Actors\Actor;
 use App\Support\Actors\ActorContext;
+use App\Support\Console\IsolatedRuns;
 use Illuminate\Console\Command;
 
 /**
  * Charges late penalties on open invoices past their grace period
  * (PRD §8.4). Runs hourly so each property's midnight is picked up; a day
- * already charged is never charged again.
+ * already charged is never charged again. An invoice that fails is
+ * reported and skipped.
  */
 final class AccruePenalties extends Command
 {
@@ -24,22 +26,27 @@ final class AccruePenalties extends Command
     public function handle(ActorContext $actors, TenantContext $tenants, AccrueInvoicePenalties $accrue): int
     {
         $accrued = 0;
+        $runs = new IsolatedRuns;
 
-        $actors->actingAs(Actor::system(), function () use ($tenants, $accrue, &$accrued): void {
-            $tenants->each(function () use ($accrue, &$accrued): void {
-                Invoice::query()
-                    ->whereIn('status', InvoiceState::openValues())
-                    ->where('balance_amount', '>', 0)
-                    ->whereDate('due_date', '<=', now()->addDay())
-                    ->orderBy('id')
-                    ->each(function (Invoice $invoice) use ($accrue, &$accrued): void {
-                        $accrued += count($accrue->handle($invoice));
-                    });
+        $actors->actingAs(Actor::system(), function () use ($tenants, $accrue, $runs, &$accrued): void {
+            $tenants->each(function () use ($accrue, $runs, &$accrued): void {
+                $runs->attempt(function () use ($accrue, $runs, &$accrued): void {
+                    Invoice::query()
+                        ->whereIn('status', InvoiceState::openValues())
+                        ->where('balance_amount', '>', 0)
+                        ->whereDate('due_date', '<=', now()->addDay())
+                        ->orderBy('id')
+                        ->each(function (Invoice $invoice) use ($accrue, $runs, &$accrued): void {
+                            $runs->attempt(function () use ($accrue, $invoice, &$accrued): void {
+                                $accrued += count($accrue->handle($invoice));
+                            });
+                        });
+                });
             });
         });
 
         $this->components->info("{$accrued} denda dicatat.");
 
-        return self::SUCCESS;
+        return $runs->finish($this);
     }
 }

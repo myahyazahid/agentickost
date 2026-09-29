@@ -64,7 +64,6 @@ class RoomForm
                     ->schema([
                         AttachmentUpload::make('photos', AttachmentCollection::Photo)
                             ->label('Foto kamar')
-                            ->image()
                             ->maxFiles(10)
                             ->reorderable(),
                     ]),

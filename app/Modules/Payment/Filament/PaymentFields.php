@@ -125,6 +125,12 @@ final class PaymentFields
      */
     public static function bankAccountOptions(?string $propertyId): array
     {
+        // The property comes from form state; a property the user cannot see
+        // only gets the accounts shared by every property.
+        if ($propertyId !== null && ! Property::query()->accessibleBy(User::current())->whereKey($propertyId)->exists()) {
+            $propertyId = null;
+        }
+
         return BankAccount::query()
             ->where('is_active', true)
             ->where(fn (Builder $query) => $query->whereNull('property_id')->orWhere('property_id', $propertyId ?? ''))

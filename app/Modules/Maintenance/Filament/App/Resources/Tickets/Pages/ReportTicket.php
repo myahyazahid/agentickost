@@ -53,7 +53,7 @@ class ReportTicket extends CreateRecord
                     Select::make('room_id')
                         ->label('Kamar')
                         ->placeholder('Area umum')
-                        ->options(fn (Get $get): array => Room::query()->where('property_id', $get('property_id') ?? '')->orderBy('number')->pluck('number', 'id')->map(fn (string $number): string => "Kamar {$number}")->all())
+                        ->options(fn (Get $get): array => Room::query()->accessibleBy(User::current())->where('property_id', $get('property_id') ?? '')->orderBy('number')->pluck('number', 'id')->map(fn (string $number): string => "Kamar {$number}")->all())
                         ->searchable()
                         ->helperText('Kosongkan untuk lorong, dapur, atau area umum lain.'),
                     TextInput::make('title')->label('Masalahnya')->placeholder('Misal: keran kamar mandi bocor')->required()->maxLength(150)->columnSpanFull(),
@@ -67,7 +67,6 @@ class ReportTicket extends CreateRecord
                     Textarea::make('description')->label('Keterangan')->required()->rows(3)->columnSpanFull(),
                     AttachmentUpload::make('photos', AttachmentCollection::Before)
                         ->label('Foto kerusakan')
-                        ->image()
                         ->maxFiles(5)
                         ->columnSpanFull(),
                 ]),

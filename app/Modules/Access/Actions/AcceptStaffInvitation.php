@@ -8,6 +8,7 @@ use App\Modules\Access\Models\User;
 use App\Modules\Tenancy\TenantContext;
 use App\Support\Actions\Action;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -39,7 +40,7 @@ final class AcceptStaffInvitation extends Action
             $this->authorize('create', User::class);
 
             $data = $this->validate($input, [
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'password' => ['required', 'string', Password::default(), 'confirmed'],
             ]);
 
             if (DB::table('users')->where('email', $invitation->email)->exists()) {

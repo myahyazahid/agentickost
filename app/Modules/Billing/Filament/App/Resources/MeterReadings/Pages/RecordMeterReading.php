@@ -94,7 +94,6 @@ class RecordMeterReading extends CreateRecord
                         ->visible(fn (Get $get): bool => (bool) $get('is_meter_replaced')),
                     AttachmentUpload::make('photos', AttachmentCollection::Meter)
                         ->label('Foto meteran')
-                        ->image()
                         ->maxFiles(3)
                         ->required()
                         ->columnSpanFull(),
@@ -190,7 +189,7 @@ class RecordMeterReading extends CreateRecord
         }
 
         $last = MeterReading::query()
-            ->where('room_id', $roomId)
+            ->whereIn('room_id', Room::query()->accessibleBy(User::current())->whereKey($roomId)->select('id'))
             ->where('utility', $utility)
             ->latest('reading_date')
             ->first();

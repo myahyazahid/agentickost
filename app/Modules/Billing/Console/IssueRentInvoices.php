@@ -8,12 +8,13 @@ use App\Modules\Lease\States\Contract\ContractState;
 use App\Modules\Tenancy\TenantContext;
 use App\Support\Actors\Actor;
 use App\Support\Actors\ActorContext;
+use App\Support\Console\IsolatedRuns;
 use Illuminate\Console\Command;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Issues rent invoices whose issue date has come, in each property's own
- * time zone (FR-BIL-01). Runs hourly and is safe to repeat.
+ * time zone (FR-BIL-01). Runs hourly and is safe to repeat. A contract that
+ * fails is reported and skipped; the others are still billed.
  */
 final class IssueRentInvoices extends Command
 {
@@ -24,24 +25,25 @@ final class IssueRentInvoices extends Command
     public function handle(ActorContext $actors, TenantContext $tenants, IssueDueInvoices $issue): int
     {
         $issued = 0;
+        $runs = new IsolatedRuns;
 
-        $actors->actingAs(Actor::system(), function () use ($tenants, $issue, &$issued): void {
-            $tenants->each(function () use ($issue, &$issued): void {
-                Contract::query()
-                    ->whereIn('status', ContractState::runningValues())
-                    ->orderBy('id')
-                    ->each(function (Contract $contract) use ($issue, &$issued): void {
-                        try {
-                            $issued += count($issue->handle($contract));
-                        } catch (ValidationException $exception) {
-                            report($exception);
-                        }
-                    });
+        $actors->actingAs(Actor::system(), function () use ($tenants, $issue, $runs, &$issued): void {
+            $tenants->each(function () use ($issue, $runs, &$issued): void {
+                $runs->attempt(function () use ($issue, $runs, &$issued): void {
+                    Contract::query()
+                        ->whereIn('status', ContractState::runningValues())
+                        ->orderBy('id')
+                        ->each(function (Contract $contract) use ($issue, $runs, &$issued): void {
+                            $runs->attempt(function () use ($issue, $contract, &$issued): void {
+                                $issued += count($issue->handle($contract));
+                            });
+                        });
+                });
             });
         });
 
         $this->components->info("{$issued} tagihan diterbitkan.");
 
-        return self::SUCCESS;
+        return $runs->finish($this);
     }
 }

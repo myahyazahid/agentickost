@@ -14,6 +14,7 @@ use App\Support\Actors\ActorContext;
 use App\Support\Phone;
 use Closure;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -117,8 +118,14 @@ final class CreateResident extends Action
         $existing = $query->first();
 
         if ($existing !== null) {
+            // Name the resident only to someone allowed to see them, so an
+            // identity number cannot be used to look up residents of other
+            // properties.
+            $user = app(ActorContext::class)->current()->user;
+            $name = $user === null || Gate::forUser($user)->allows('view', $existing) ? " atas nama {$existing->full_name}" : '';
+
             throw ValidationException::withMessages([
-                'identity_number' => "Nomor identitas ini sudah terdaftar atas nama {$existing->full_name}.",
+                'identity_number' => "Nomor identitas ini sudah terdaftar{$name}.",
             ]);
         }
     }

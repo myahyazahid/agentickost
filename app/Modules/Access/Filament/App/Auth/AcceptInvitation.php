@@ -7,9 +7,12 @@ use App\Modules\Access\Models\StaffInvitation;
 use App\Support\Actors\Actor;
 use App\Support\Actors\ActorContext;
 use App\Support\Filament\DomainActions;
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use DanHarrin\LivewireRateLimiting\WithRateLimiting;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Pages\SimplePage;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
@@ -18,6 +21,7 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Attributes\Locked;
 
 /**
  * Where an invited staff member lands from the email (FR-USR-03): they see
@@ -27,12 +31,18 @@ use Illuminate\Validation\Rules\Password;
  */
 class AcceptInvitation extends SimplePage
 {
+    use WithRateLimiting;
+
+    #[Locked]
     public string $token = '';
 
+    #[Locked]
     public ?string $invitee = null;
 
+    #[Locked]
     public ?string $businessName = null;
 
+    #[Locked]
     public ?string $roleLabel = null;
 
     /**
@@ -120,6 +130,17 @@ class AcceptInvitation extends SimplePage
 
     public function accept(): void
     {
+        try {
+            $this->rateLimit(5);
+        } catch (TooManyRequestsException $exception) {
+            Notification::make()
+                ->danger()
+                ->title("Terlalu banyak percobaan. Coba lagi dalam {$exception->secondsUntilAvailable} detik.")
+                ->send();
+
+            return;
+        }
+
         $data = $this->form->getState();
 
         $user = DomainActions::forForm(fn () => app(ActorContext::class)->actingAs(

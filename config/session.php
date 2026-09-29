@@ -169,7 +169,9 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // On by default outside local development and tests, so the session
+    // cookie is never sent over plain HTTP in staging or production.
+    'secure' => env('SESSION_SECURE_COOKIE', ! in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)),
 
     /*
     |--------------------------------------------------------------------------

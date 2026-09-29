@@ -83,7 +83,7 @@ class DepositTransactionsRelationManager extends RelationManager
             ->schema([
                 MoneyInput::make('amount')->label('Jumlah')->required()->minValue(1),
                 Textarea::make('reason')->label('Alasan')->placeholder('Misal: cat dinding rusak')->required()->minLength(5),
-                AttachmentUpload::make('photos', AttachmentCollection::Photo)->label('Foto')->image()->maxFiles(5),
+                AttachmentUpload::make('photos', AttachmentCollection::Photo)->label('Foto')->maxFiles(5),
             ])
             ->modalSubmitActionLabel('Potong deposit')
             ->action(function (Action $action, array $data): void {

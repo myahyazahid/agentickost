@@ -26,6 +26,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use UnitEnum;
@@ -202,15 +204,24 @@ class ImportData extends Page implements HasTable
             throw ValidationException::withMessages(['data.file' => 'Pilih properti dan unggah berkasnya.']);
         }
 
-        $result = app(ImportOnboardingData::class)->handle(
-            $property,
-            $file->getRealPath(),
-            // The stored name keeps the uploaded extension; the original name
-            // is not always recoverable from a temporary upload.
-            $file->getFilename(),
-            $commit,
-            ImportSheet::tryFrom((string) ($data['csv_sheet'] ?? '')),
-        );
+        // The spreadsheet reader needs a local file; on S3 the temporary
+        // upload is not one. The stored name keeps the uploaded extension;
+        // the original name is not always recoverable from a temporary upload.
+        $local = storage_path('app/private/import-work/'.Str::random(24).'-'.$file->getFilename());
+        File::ensureDirectoryExists(dirname($local), 0700);
+        File::put($local, (string) $file->get());
+
+        try {
+            $result = app(ImportOnboardingData::class)->handle(
+                $property,
+                $local,
+                $file->getFilename(),
+                $commit,
+                ImportSheet::tryFrom((string) ($data['csv_sheet'] ?? '')),
+            );
+        } finally {
+            File::delete($local);
+        }
 
         $this->result = $result->toArray();
 

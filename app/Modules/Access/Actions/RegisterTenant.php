@@ -11,6 +11,7 @@ use App\Support\Actions\Action;
 use App\Support\Phone;
 use Closure;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 /**
  * Self-registration of a kost business (FR-TNT-01, FR-TNT-02): a new tenant
@@ -63,7 +64,7 @@ final class RegisterTenant extends Action
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', $phone],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', Password::default()],
         ];
     }
 

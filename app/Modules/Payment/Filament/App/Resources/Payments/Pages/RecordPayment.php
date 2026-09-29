@@ -122,7 +122,6 @@ class RecordPayment extends CreateRecord
                         ->native(false),
                     AttachmentUpload::make('proofs', AttachmentCollection::PaymentProof)
                         ->label('Bukti bayar')
-                        ->image()
                         ->maxFiles(5)
                         ->columnSpanFull(),
                     Text::make('Transfer yang Anda catat menunggu verifikasi manajer atau owner sebelum melunasi tagihan.')

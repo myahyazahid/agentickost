@@ -97,7 +97,7 @@ class ViewTicket extends ViewRecord
             ->modalDescription('Owner atau manajer mengonfirmasi hasilnya. Biaya dicatat sebagai pengeluaran saat dikonfirmasi.')
             ->schema([
                 Textarea::make('note')->label('Yang dikerjakan')->placeholder('Misal: karet keran diganti')->required(),
-                AttachmentUpload::make('photos', AttachmentCollection::After)->label('Foto sesudah')->image()->maxFiles(5),
+                AttachmentUpload::make('photos', AttachmentCollection::After)->label('Foto sesudah')->maxFiles(5),
                 MoneyInput::make('cost_amount')->label('Biaya')->default(0)->live(),
                 Select::make('paid_from_account_id')
                     ->label('Dibayar dari')

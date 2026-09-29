@@ -10,6 +10,7 @@ use App\Modules\Lease\States\Contract\Active;
 use App\Modules\Tenancy\TenantContext;
 use App\Support\Actors\Actor;
 use App\Support\Actors\ActorContext;
+use App\Support\Console\IsolatedRuns;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
@@ -27,50 +28,56 @@ final class RemindEndingContracts extends Command
     public function handle(ActorContext $actors, TenantContext $tenants): int
     {
         $reminded = 0;
+        $runs = new IsolatedRuns;
 
-        $actors->actingAs(Actor::system(), function () use ($tenants, &$reminded): void {
-            $tenants->each(function () use (&$reminded): void {
-                Contract::query()
-                    ->where('status', Active::$name)
-                    ->whereNotNull('end_date')
-                    ->whereNull('end_reminder_sent_at')
-                    ->whereDoesntHave('renewal')
-                    ->with(['property', 'room'])
-                    ->get()
-                    ->each(function (Contract $contract) use (&$reminded): void {
-                        $property = $contract->property()->firstOrFail();
-                        $window = max($property->resolvedSettings()->notice_days, 7);
+        $actors->actingAs(Actor::system(), function () use ($tenants, $runs, &$reminded): void {
+            $tenants->each(function () use ($runs, &$reminded): void {
+                $runs->attempt(function () use ($runs, &$reminded): void {
+                    Contract::query()
+                        ->where('status', Active::$name)
+                        ->whereNotNull('end_date')
+                        ->whereNull('end_reminder_sent_at')
+                        ->whereDoesntHave('renewal')
+                        ->with(['property', 'room'])
+                        ->get()
+                        ->each(function (Contract $contract) use ($runs, &$reminded): void {
+                            $runs->attempt(function () use ($contract, &$reminded): void {
+                                $property = $contract->property()->firstOrFail();
+                                $window = max($property->resolvedSettings()->notice_days, 7);
 
-                        if ($contract->end_date === null || $contract->end_date->greaterThan($property->today()->addDays($window))) {
-                            return;
-                        }
+                                if ($contract->end_date === null || $contract->end_date->greaterThan($property->today()->addDays($window))) {
+                                    return;
+                                }
 
-                        $recipients = User::query()
-                            ->permission(LeasePermission::ManageContracts->value)
-                            ->where('is_active', true)
-                            ->get()
-                            ->filter(fn (User $user): bool => $property->isAccessibleBy($user));
+                                $recipients = User::query()
+                                    ->permission(LeasePermission::ManageContracts->value)
+                                    ->where('is_active', true)
+                                    ->get()
+                                    ->filter(fn (User $user): bool => $property->isAccessibleBy($user));
 
-                        Notification::make()
-                            ->warning()
-                            ->title("Kontrak kamar {$contract->room?->number} berakhir ".$contract->end_date->translatedFormat('j F Y'))
-                            ->body("{$property->name}, {$contract->primaryResident()?->full_name}. Siapkan perpanjangan atau check-out.")
-                            ->actions([
-                                Action::make('open')
-                                    ->label('Buka kontrak')
-                                    ->url(ContractResource::getUrl('view', ['record' => $contract], panel: 'app')),
-                            ])
-                            ->sendToDatabase($recipients);
+                                Notification::make()
+                                    ->warning()
+                                    // Notifications render limited HTML; names typed by staff are escaped.
+                                    ->title(e("Kontrak kamar {$contract->room?->number} berakhir ".$contract->end_date->translatedFormat('j F Y')))
+                                    ->body(e("{$property->name}, {$contract->primaryResident()?->full_name}. Siapkan perpanjangan atau check-out."))
+                                    ->actions([
+                                        Action::make('open')
+                                            ->label('Buka kontrak')
+                                            ->url(ContractResource::getUrl('view', ['record' => $contract], panel: 'app')),
+                                    ])
+                                    ->sendToDatabase($recipients);
 
-                        $contract->end_reminder_sent_at = now();
-                        $contract->save();
-                        $reminded++;
-                    });
+                                $contract->end_reminder_sent_at = now();
+                                $contract->save();
+                                $reminded++;
+                            });
+                        });
+                });
             });
         });
 
         $this->components->info("{$reminded} kontrak diingatkan.");
 
-        return self::SUCCESS;
+        return $runs->finish($this);
     }
 }

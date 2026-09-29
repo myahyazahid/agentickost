@@ -23,6 +23,7 @@ use App\Modules\Property\Actions\AssignStaffToProperty;
 use App\Modules\Property\Filament\App\Resources\Rooms\Pages\ListRooms;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\Support\BillingScenario;
@@ -148,7 +149,7 @@ it('sets a utility rate and records a reading with a photo', function () {
             'reading_date' => '2026-09-15',
         ])
         ->assertSee('Kamar ini belum punya catatan')
-        ->fillForm(['current_value' => '1200.5', 'photos' => [BillingScenario::photo()]])
+        ->fillForm(['current_value' => '1200.5', 'photos' => [UploadedFile::fake()->image('meteran.jpg')]])
         ->call('create')
         ->assertHasNoFormErrors();
 

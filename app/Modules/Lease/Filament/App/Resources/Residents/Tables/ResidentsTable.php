@@ -61,8 +61,9 @@ class ResidentsTable
                             $identity = app(RevealResidentIdentity::class)->handle($record);
 
                             Notification::make()
-                                ->title("Identitas {$record->full_name}")
-                                ->body(($identity['identity_type'] ?? 'Identitas').': '.($identity['identity_number'] ?? 'belum diisi'))
+                                // Notifications render limited HTML; resident data is escaped.
+                                ->title('Identitas '.e($record->full_name))
+                                ->body(e(($identity['identity_type'] ?? 'Identitas').': '.($identity['identity_number'] ?? 'belum diisi')))
                                 ->actions(array_map(
                                     fn (array $document, int $index): Action => Action::make("document{$index}")
                                         ->label("Buka {$document['name']}")

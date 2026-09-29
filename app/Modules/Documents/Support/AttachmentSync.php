@@ -29,20 +29,24 @@ final class AttachmentSync
      * paths no longer listed are removed together with their files once the
      * transaction commits.
      *
+     * Paths come from form state, which the browser controls. A path this
+     * owner does not have yet must be a fresh upload: inside the tenant's
+     * folder for this collection, on disk, and not already the file of any
+     * other record. Otherwise one record could take over, encrypt, or delete
+     * another record's file.
+     *
      * @param  list<string>  $paths  Files already uploaded under the tenant directory
      */
     public function sync(Model $owner, AttachmentCollection $collection, array $paths, string $field = 'photos'): void
     {
-        foreach ($paths as $path) {
-            if (! $this->storage->owns($path)) {
-                throw ValidationException::withMessages([$field => 'Berkas tidak valid.']);
-            }
-        }
+        $paths = array_values(array_unique($paths));
 
         $existing = Attachment::query()
             ->whereMorphedTo('attachable', $owner)
             ->where('collection', $collection->value)
             ->get();
+
+        $this->ensureFreshUploads(array_diff($paths, $existing->pluck('path')->all()), $collection, $field);
 
         foreach ($existing as $attachment) {
             if (! in_array($attachment->path, $paths, true)) {
@@ -54,6 +58,25 @@ final class AttachmentSync
 
         foreach (array_diff($paths, $known) as $path) {
             $this->record($owner, $collection, $path, basename($path));
+        }
+    }
+
+    /**
+     * @param  array<int, string>  $paths
+     */
+    private function ensureFreshUploads(array $paths, AttachmentCollection $collection, string $field): void
+    {
+        $directory = $this->storage->path($collection->directory()).'/';
+
+        foreach ($paths as $path) {
+            $valid = $this->storage->owns($path)
+                && str_starts_with($path, $directory)
+                && Storage::disk()->exists($path)
+                && ! Attachment::query()->where('path', $path)->exists();
+
+            if (! $valid) {
+                throw ValidationException::withMessages([$field => 'Berkas tidak valid. Unggah ulang berkasnya.']);
+            }
         }
     }
 

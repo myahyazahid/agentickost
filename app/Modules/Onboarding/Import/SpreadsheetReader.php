@@ -19,6 +19,12 @@ use Throwable;
 final class SpreadsheetReader
 {
     /**
+     * More rows than any kost has rooms or residents; a file beyond this is
+     * refused rather than read into memory.
+     */
+    public const MAX_ROWS = 5000;
+
+    /**
      * @return array{sheets: array<string, SheetRows>, errors: list<string>}
      */
     public static function read(string $path, string $fileName, ?ImportSheet $csvSheet = null): array
@@ -99,6 +105,12 @@ final class SpreadsheetReader
 
             if (array_filter($record, fn (mixed $value): bool => Cell::text($value) !== null) !== []) {
                 $data[$number] = $record;
+            }
+
+            if (count($data) > self::MAX_ROWS) {
+                $errors[] = "Sheet {$kind->getLabel()} berisi lebih dari ".number_format(self::MAX_ROWS, 0, ',', '.').' baris. Pecah menjadi beberapa berkas.';
+
+                return [];
             }
         }
 

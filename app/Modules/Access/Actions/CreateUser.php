@@ -7,6 +7,7 @@ use App\Modules\Access\Models\User;
 use App\Support\Actions\Action;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 /**
  * Adds a staff member with one role to the current tenant. Accounts made by
@@ -26,7 +27,7 @@ final class CreateUser extends Action
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')],
             'phone' => ['nullable', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', Password::default()],
             'role' => ['required', Rule::enum(Role::class)->only(Role::staff())],
             'email_verified' => ['sometimes', 'boolean'],
         ]);

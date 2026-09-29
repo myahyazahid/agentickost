@@ -40,7 +40,6 @@ class ResidentForm
                     AttachmentUpload::make('identity_documents', AttachmentCollection::Identity)
                         ->label(fn (string $operation): string => $operation === 'edit' ? 'Ganti foto identitas' : 'Foto identitas')
                         ->helperText(fn (string $operation): ?string => $operation === 'edit' ? 'Kosongkan untuk tetap memakai foto yang tersimpan.' : null)
-                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
                         ->maxFiles(4)
                         ->columnSpanFull(),
                 ]),

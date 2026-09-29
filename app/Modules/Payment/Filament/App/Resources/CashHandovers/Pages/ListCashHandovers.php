@@ -102,9 +102,15 @@ class ListCashHandovers extends ListRecords
 
     private static function heldHint(?string $propertyId, ?string $staffId): string
     {
-        $staffId ??= User::current()->id;
+        $user = User::current();
 
-        if ($propertyId === null) {
+        // Both values come from form state: only a property the user can see,
+        // and only their own cash unless they confirm handovers.
+        if ($staffId === null || ! $user->can(PaymentPermission::ConfirmHandovers->value)) {
+            $staffId = $user->id;
+        }
+
+        if ($propertyId === null || ! Property::query()->accessibleBy($user)->whereKey($propertyId)->exists()) {
             return 'Pilih properti untuk melihat saldo kas.';
         }
 

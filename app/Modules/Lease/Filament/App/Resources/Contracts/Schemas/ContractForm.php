@@ -200,7 +200,7 @@ class ContractForm
      */
     private static function fillRent(Get $get, Set $set): void
     {
-        $room = is_string($get('room_id')) ? Room::query()->whereKey($get('room_id'))->first() : null;
+        $room = is_string($get('room_id')) ? Room::query()->accessibleBy(User::current())->whereKey($get('room_id'))->first() : null;
         $period = $get('rental_period');
         $period = $period instanceof RentalPeriod ? $period : RentalPeriod::tryFrom(is_string($period) ? $period : '');
         $start = $get('start_date');

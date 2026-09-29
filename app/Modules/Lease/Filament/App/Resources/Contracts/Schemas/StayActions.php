@@ -67,7 +67,7 @@ final class StayActions
             ->schema([
                 DatePicker::make('inspected_on')->label('Tanggal check-in')->maxDate(now())->required(),
                 self::checklist(withCharges: false),
-                AttachmentUpload::make('photos', AttachmentCollection::Inspection)->label('Foto kamar')->image()->maxFiles(10),
+                AttachmentUpload::make('photos', AttachmentCollection::Inspection)->label('Foto kamar')->maxFiles(10),
                 Textarea::make('notes')->label('Catatan'),
                 Toggle::make('resident_acknowledged')
                     ->label('Penghuni sudah memeriksa dan setuju')
@@ -139,7 +139,7 @@ final class StayActions
             ->schema([
                 DatePicker::make('moved_out_on')->label('Tanggal keluar')->maxDate(now())->required(),
                 self::checklist(withCharges: true),
-                AttachmentUpload::make('photos', AttachmentCollection::Inspection)->label('Foto kamar')->image()->maxFiles(10),
+                AttachmentUpload::make('photos', AttachmentCollection::Inspection)->label('Foto kamar')->maxFiles(10),
                 MoneyInput::make('early_termination_amount')
                     ->label('Penalti keluar sebelum waktunya')
                     ->helperText('Terisi dari kontrak bila pemberitahuan keluar kurang dari masa pemberitahuan properti atau kontrak diputus.'),
@@ -255,7 +255,7 @@ final class StayActions
 
     private static function priceHint(Contract $contract, ?string $roomId, ?string $movedOn): string
     {
-        $room = $roomId === null ? null : Room::query()->find($roomId);
+        $room = $roomId === null ? null : Room::query()->accessibleBy(User::current())->find($roomId);
 
         if ($room === null) {
             return 'Pilih kamar baru';

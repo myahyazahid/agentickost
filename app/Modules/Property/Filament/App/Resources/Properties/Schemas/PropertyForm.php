@@ -34,7 +34,6 @@ class PropertyForm
                     ->schema([
                         AttachmentUpload::make('photos', AttachmentCollection::Photo)
                             ->label('Foto properti')
-                            ->image()
                             ->maxFiles(10)
                             ->reorderable(),
                     ]),

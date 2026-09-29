@@ -30,6 +30,10 @@ final class UpdateResident extends Action
             $this->authorize('flag', $resident);
         }
 
+        if (self::changesIdentity($resident, $data)) {
+            $this->authorize('viewIdentity', $resident);
+        }
+
         if (blank($data['identity_number'] ?? null)) {
             unset($data['identity_number']);
         } else {
@@ -45,5 +49,34 @@ final class UpdateResident extends Action
 
             return $resident;
         });
+    }
+
+    /**
+     * Identity data is only replaced by staff who may see it (FR-PNH-02):
+     * otherwise a caretaker could overwrite, and so delete, documents they
+     * are not allowed to open.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private static function changesIdentity(Resident $resident, array $data): bool
+    {
+        if (filled($data['identity_number'] ?? null)) {
+            return true;
+        }
+
+        if (array_key_exists('identity_type', $data) && ($data['identity_type'] ?? null) !== $resident->identity_type?->value) {
+            return true;
+        }
+
+        if (! array_key_exists('identity_documents', $data)) {
+            return false;
+        }
+
+        $given = array_values(array_filter((array) $data['identity_documents'], is_string(...)));
+        $stored = $resident->attachmentPaths(AttachmentCollection::Identity);
+        sort($given);
+        sort($stored);
+
+        return $given !== $stored;
     }
 }

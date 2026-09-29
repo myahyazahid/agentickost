@@ -58,7 +58,10 @@ Contoh memakai user `deploy` dan direktori `/var/www/agentickost`.
    APP_DEBUG=false
    APP_URL=https://staging.<domain>
 
-   LOG_STACK=daily
+   LOG_STACK=json
+   LOG_LEVEL=info
+
+   SESSION_ENCRYPT=true
 
    DB_DATABASE=agentickost
    DB_USERNAME=agentickost
@@ -100,9 +103,6 @@ Contoh memakai user `deploy` dan direktori `/var/www/agentickost`.
        listen 80;
        server_name staging.<domain>;
        root /var/www/agentickost/public;
-
-       add_header X-Frame-Options "SAMEORIGIN";
-       add_header X-Content-Type-Options "nosniff";
 
        index index.php;
        charset utf-8;
@@ -191,3 +191,108 @@ Aplikasi hanya butuh endpoint S3-compatible, jadi pilihan ini bisa diganti tanpa
 3. Uji dengan `php artisan sentry:test`.
 
 Exception dilaporkan lewat `Integration::handles()` di [`bootstrap/app.php`](../bootstrap/app.php). Di test suite, DSN dikosongkan di `phpunit.xml`.
+
+Exception dari job antrian yang gagal juga masuk Sentry lewat handler yang sama.
+
+## Kesiapan produksi
+
+Checklist sebelum data kost pilot masuk (roadmap M1.10). Semua perintah dijalankan scheduler; yang perlu disiapkan hanya server, kredensial, dan Sentry.
+
+### Pengaturan `.env` produksi
+
+| Nilai | Alasan |
+|---|---|
+| `APP_ENV=production`, `APP_DEBUG=false` | Tanpa halaman error berisi kode. Horizon hanya terbuka untuk super admin bila `APP_ENV` bukan `local` |
+| `SESSION_ENCRYPT=true` | Notifikasi yang memuat nomor identitas tersimpan terenkripsi di sesi |
+| `SESSION_SECURE_COOKIE` | Tidak perlu diisi: di luar `local` dan `testing` cookie sesi otomatis hanya lewat HTTPS |
+| `LOG_STACK=json` | Log satu objek JSON per baris di `storage/logs/laravel.json-*.log` (NFR-OBS-01) |
+
+Aplikasi sendiri mengirim header keamanan (X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, dan HSTS bila lewat HTTPS), termasuk di halaman error, jadi Nginx tidak perlu menambahkannya. Di luar `local` dan `testing`, password harus berisi huruf dan angka dan tidak ada di daftar password bocor (dicek ke layanan Have I Been Pwned).
+
+### Kunci yang wajib disimpan terpisah
+
+Simpan `APP_KEY` dan `IDENTITY_HASH_KEY` di password manager tim, di luar server. Nomor dan foto identitas penghuni dienkripsi dengan `APP_KEY`: backup database tanpa kunci ini tidak bisa membuka data identitas.
+
+### Pemantauan job (NFR-OBS-01)
+
+Setiap job terjadwal di [`routes/console.php`](../routes/console.php) melapor ke Sentry Crons lewat `->sentryMonitor()`. Sentry memberi alert bila job gagal atau tidak berjalan sesuai jadwal, misalnya karena cron atau server mati. Monitor terdaftar otomatis saat job pertama kali berjalan; atur penerima alert di Sentry (Alerts → Crons).
+
+Job lintas tenant (terbit tagihan, denda, perpanjangan, pengingat) memproses setiap tenant dan setiap kontrak atau tagihan secara terpisah. Bila satu gagal, yang lain tetap diproses, error dilaporkan ke Sentry, dan job berakhir gagal sehingga monitor memberi alert.
+
+### Backup (NFR-BKP-01 sampai NFR-BKP-04)
+
+| Job | Jadwal | Isi |
+|---|---|---|
+| `backup:database` | Setiap hari 02:00 WIB | Dump penuh satu snapshot (`mysqldump --single-transaction`), dikompres, dikirim ke disk `backups`. Dump lebih tua dari `BACKUP_KEEP_DAYS` (35) dihapus |
+| `backup:binlogs` | Setiap jam, menit ke-30 | Menutup binary log yang sedang berjalan, lalu menyalin setiap log yang sudah tertutup dan belum tersalin. Data yang bisa hilang paling banyak sekitar satu jam (RPO NFR-BKP-02) |
+| `backup:restore-test` | Tanggal 1 setiap bulan pukul 21:00 UTC (tanggal 2, 04:00 WIB) | Memulihkan dump terakhir ke database sementara, mengecek tabel inti dan keseimbangan setiap jurnal, lalu menghapus database sementara (NFR-BKP-04) |
+
+Persiapan server:
+
+1. **Lokasi terpisah (NFR-BKP-03).** Buat bucket khusus backup di penyedia atau region lain dari server dan bucket berkas aplikasi. Bucket harus privat; aktifkan enkripsi di sisi penyedia bila tersedia. Isi di `.env`:
+
+   ```dotenv
+   BACKUP_S3_KEY=<key>
+   BACKUP_S3_SECRET=<secret>
+   BACKUP_S3_REGION=<region>
+   BACKUP_S3_BUCKET=<bucket backup>
+   BACKUP_S3_ENDPOINT=<endpoint>
+   ```
+
+2. **Alat MySQL.** `apt install mysql-client` menyediakan `mysqldump`, `mysql`, dan `mysqlbinlog`. Bila tidak ada di PATH, isi `BACKUP_MYSQLDUMP`, `BACKUP_MYSQL`, `BACKUP_MYSQLBINLOG`.
+
+3. **Akun backup.** Backup memakai akun sendiri dengan hak yang tidak dimiliki user aplikasi:
+
+   ```sql
+   CREATE USER 'agentickost_backup'@'localhost' IDENTIFIED BY '<password>';
+   GRANT SELECT, SHOW VIEW, TRIGGER, LOCK TABLES, EVENT ON agentickost.* TO 'agentickost_backup'@'localhost';
+   GRANT RELOAD, REPLICATION CLIENT, REPLICATION SLAVE, SESSION_VARIABLES_ADMIN ON *.* TO 'agentickost_backup'@'localhost';
+   GRANT ALL PRIVILEGES ON agentickost_restore_test.* TO 'agentickost_backup'@'localhost';
+   ```
+
+   `SESSION_VARIABLES_ADMIN` dipakai uji pulih untuk mematikan binary log di sesinya sendiri, supaya isi dump tidak tercatat ulang dan membengkakkan backup binary log. Lalu isi `BACKUP_DB_USERNAME` dan `BACKUP_DB_PASSWORD` di `.env`. Password ditulis ke berkas opsi sementara (mode 600) saat perintah berjalan, tidak pernah di baris perintah.
+
+4. **Binary log.** MySQL 8.4 menyalakannya secara default. Pastikan di `/etc/mysql/mysql.conf.d/mysqld.cnf`:
+
+   ```ini
+   log_bin = binlog
+   binlog_format = ROW
+   binlog_expire_logs_seconds = 604800
+   ```
+
+   Tujuh hari di server cukup karena salinannya ada di bucket backup.
+
+5. **Uji pertama.** Jalankan `php artisan backup:database`, `php artisan backup:binlogs`, lalu `php artisan backup:restore-test`. Ketiganya harus berhasil sebelum data pilot masuk.
+
+### Pemulihan ke titik waktu tertentu
+
+Target pemulihan 4 jam (RTO NFR-BKP-02). Langkahnya, misalnya untuk kembali ke keadaan 5 Oktober 2026 pukul 14:55 WIB (07:55 UTC):
+
+1. Hentikan aplikasi (`php artisan down`) dan worker (`supervisorctl stop agentickost-horizon`).
+2. Unduh dump terakhir sebelum waktu tujuan dari `database/` di bucket backup, dan semua berkas di `binlog/` sesudahnya. Ekstrak dengan `gunzip`.
+3. Buat database kosong, lalu muat dump:
+
+   ```sh
+   mysql -e "CREATE DATABASE agentickost_pulih CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+   mysql agentickost_pulih < agentickost-20261004-190000.sql
+   ```
+
+4. Cari posisi binary log saat dump dibuat, di baris awal dump:
+
+   ```sh
+   grep -m1 "CHANGE REPLICATION SOURCE TO" agentickost-20261004-190000.sql
+   # -- CHANGE REPLICATION SOURCE TO SOURCE_LOG_FILE='binlog.000123', SOURCE_LOG_POS=4567;
+   ```
+
+5. Putar ulang binary log dari posisi itu sampai sebelum waktu tujuan (waktu dalam zona waktu server MySQL, UTC):
+
+   ```sh
+   mysqlbinlog --start-position=4567 --stop-datetime="2026-10-05 07:55:00" \
+     --rewrite-db="agentickost->agentickost_pulih" --database=agentickost_pulih \
+     binlog.000123 binlog.000124 binlog.000125 | mysql agentickost_pulih
+   ```
+
+   `--database` memakai nama baru karena mysqlbinlog mengganti nama database lebih dulu, baru menyaring. `--start-position` hanya berlaku untuk berkas pertama.
+
+6. Periksa isinya (jumlah tenant, tagihan terakhir, jurnal seimbang), lalu arahkan `DB_DATABASE` ke `agentickost_pulih`, atau ganti nama database lama. Jalankan `php artisan up` dan nyalakan worker lagi.
+

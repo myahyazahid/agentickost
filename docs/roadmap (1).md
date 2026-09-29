@@ -245,12 +245,12 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.10 Pilot
 
-- [ ] Checklist kesiapan produksi: backup harian dan binary log, uji restore, error tracking, alert job gagal (NFR-BKP-01 sampai NFR-BKP-04, NFR-OBS-01)
-- [ ] Audit keamanan dasar sebelum data nyata masuk (NFR-SEC-04)
+- [ ] Checklist kesiapan produksi: backup harian dan binary log, uji restore, error tracking, alert job gagal (NFR-BKP-01 sampai NFR-BKP-04, NFR-OBS-01): perintah backup, uji pulih bulanan, monitor Sentry Crons, dan log JSON sudah ada dan teruji di lokal; tinggal diaktifkan di server produksi sesuai bagian Kesiapan produksi di docs/deployment.md
+- [x] Audit keamanan dasar sebelum data nyata masuk (NFR-SEC-04): path unggahan tidak bisa dipakai mengambil berkas record lain, dokumen identitas dicek hak aksesnya dan dicatat setiap dibuka, jenis berkas dibatasi (tanpa SVG/HTML), header keamanan, cookie sesi HTTPS, kebijakan password, batas percobaan di halaman undangan, pratinjau form dibatasi ke properti yang boleh dilihat; sisa temuan kecil dicatat di Parkir
 - [ ] Onboarding 2–3 kost pilot, didampingi langsung
 - [ ] Jalankan minimal satu siklus tagihan penuh di setiap kost pilot
 - [ ] Kumpulkan masukan mingguan dan catat di Parkir atau backlog
-- [ ] Ukur metrik awal: waktu verifikasi, ketepatan bayar (PRD §15.1)
+- [ ] Ukur metrik awal: waktu verifikasi, ketepatan bayar (PRD §15.1): alat ukurnya ada di panel admin (Metrik pilot, per tenant per bulan); angka dibaca selama pilot berjalan
 - [ ] Tetapkan target angka metrik untuk fase berikutnya
 - [ ] Perbarui PRD dan roadmap berdasarkan hasil pilot
 
@@ -482,6 +482,11 @@ Ide dan permintaan di luar roadmap. Ditinjau di akhir setiap fase.
 
 | Tanggal | Ide / permintaan | Sumber | Keputusan |
 |---|---|---|---|
+| 29 Sep 2026 | Batas percobaan login per akun, bukan hanya per IP (NFR-SEC-03) | Audit keamanan M1.10 | Belum diputuskan |
+| 29 Sep 2026 | Enkripsi dokumen identitas sejak diunggah; sekarang berkas sempat tersimpan tanpa enkripsi sampai formulir disimpan | Audit keamanan M1.10 | Belum diputuskan |
+| 29 Sep 2026 | Tautan berbagi tagihan dan kuitansi berlaku 30 hari dan tidak bisa dicabut; pertimbangkan masa berlaku lebih pendek atau token yang bisa dicabut | Audit keamanan M1.10 | Belum diputuskan |
+| 29 Sep 2026 | Content-Security-Policy untuk halaman panel (perlu diuji dengan Livewire dan Alpine) | Audit keamanan M1.10 | Belum diputuskan |
+| 29 Sep 2026 | Batasi pilihan penghuni di CreateContract dan AddResidentToContract ke properti yang boleh dilihat, untuk pemanggil selain formulir (API, agent) | Audit keamanan M1.10 | Belum diputuskan |
 | 29 Sep 2026 | Waktu (jam) di halaman panel yang sudah ada masih tampil dalam UTC; set zona waktu tampilan Filament mengikuti tenant (NFR-LOC-02). Halaman baru M1.9 sudah memakai zona waktu tenant | Ditemukan saat M1.9 | Belum diputuskan |
 | 29 Sep 2026 | Nonaktifkan staf dan ubah peran staf dari halaman Staf; sekarang halaman itu hanya menampilkan staf dan mengundang | Ditemukan saat M1.9 | Belum diputuskan |
 | 28 Sep 2026 | Opsi "kontrak yang sudah berjalan" di formulir kontrak, supaya kost kecil bisa memasukkan kontrak lama tanpa berkas impor; sekarang kontrak berjalan hanya masuk lewat Impor data | Ditemukan saat M1.8 | Belum diputuskan |
