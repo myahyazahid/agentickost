@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Access\Models\User;
+use App\Modules\Lease\Models\Payer;
+use App\Modules\Lease\Models\Resident;
 use App\Modules\Tenancy\Models\PlatformAdmin;
 
 return [
@@ -48,6 +50,19 @@ return [
             'driver' => 'session',
             'provider' => 'platform_admins',
         ],
+
+        // Resident portal (FR-PRT-01, FR-PRT-07). Lookups run inside the
+        // tenant named in the portal URL, so a session from another tenant
+        // finds no one.
+        'resident' => [
+            'driver' => 'session',
+            'provider' => 'residents',
+        ],
+
+        'payer' => [
+            'driver' => 'session',
+            'provider' => 'payers',
+        ],
     ],
 
     /*
@@ -76,6 +91,16 @@ return [
         'platform_admins' => [
             'driver' => 'eloquent',
             'model' => PlatformAdmin::class,
+        ],
+
+        'residents' => [
+            'driver' => 'eloquent',
+            'model' => Resident::class,
+        ],
+
+        'payers' => [
+            'driver' => 'eloquent',
+            'model' => Payer::class,
         ],
 
         // 'users' => [

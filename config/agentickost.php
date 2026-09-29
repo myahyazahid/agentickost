@@ -30,17 +30,43 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Required Two-Factor Authentication
+    | Development Switches
     |--------------------------------------------------------------------------
     |
-    | Owners, accountants (FR-USR-05), and super admins (NFR-SEC-05) must set
-    | up an authenticator app before using their panel. Only the test suite
-    | turns this off, so tests can open pages without a second factor; the
-    | tests for two-factor itself turn it back on.
+    | Checks that get in the way on a local machine can be switched off in
+    | .env. Production ignores these switches and always keeps the checks on.
+    |
+    | - two_factor_required: owners, accountants (FR-USR-05), and super
+    |   admins (NFR-SEC-05) must set up an authenticator app. The test suite
+    |   turns it off; the two-factor tests turn it back on.
+    | - portal_otp_required: residents log in to the portal with a WhatsApp
+    |   code (FR-PRT-01). Off, the phone number alone logs in.
+    | - subscription_enforced: an unpaid subscription makes the tenant
+    |   read-only and plans limit rooms, properties, and staff (FR-SUB-01,
+    |   FR-SUB-04). Off, nothing is limited.
     |
     */
 
-    'two_factor_required' => (bool) env('AGENTICKOST_TWO_FACTOR_REQUIRED', true),
+    'two_factor_required' => env('APP_ENV') === 'production' || (bool) env('AGENTICKOST_TWO_FACTOR_REQUIRED', true),
+
+    'portal_otp_required' => env('APP_ENV') === 'production' || (bool) env('AGENTICKOST_PORTAL_OTP_REQUIRED', true),
+
+    'subscription_enforced' => env('APP_ENV') === 'production' || (bool) env('AGENTICKOST_SUBSCRIPTION_ENFORCED', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp
+    |--------------------------------------------------------------------------
+    |
+    | Where WhatsApp messages such as portal login codes go (PRD §14.3).
+    | "log" writes them to the application log instead of sending; it is the
+    | only driver until a provider is chosen (PRD §18 no. 3).
+    |
+    */
+
+    'whatsapp' => [
+        'driver' => env('AGENTICKOST_WHATSAPP_DRIVER', 'log'),
+    ],
 
     /*
     |--------------------------------------------------------------------------

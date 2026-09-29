@@ -12,6 +12,9 @@ use App\Modules\Lease\States\Contract\ContractState;
 use App\Modules\Lease\Support\IdentityHasher;
 use App\Modules\Property\Models\Property;
 use App\Modules\Tenancy\Concerns\BelongsToTenant;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -22,11 +25,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
 
 /**
  * A person renting a room (FR-PNH-01). Identity numbers are encrypted
  * (NFR-SEC-01) and hidden from arrays, so they never reach the audit log.
+ * Logs in to the resident portal on the `resident` guard with a code sent
+ * to their phone (FR-PRT-01); there is no password.
  *
  * @property string $id
  * @property string $tenant_id
@@ -52,12 +58,12 @@ use Illuminate\Support\Carbon;
     'institution', 'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
     'vehicle_plate', 'internal_notes', 'is_flagged',
 ])]
-#[Hidden(['identity_number', 'identity_number_hash'])]
+#[Hidden(['identity_number', 'identity_number_hash', 'remember_token'])]
 #[UseFactory(ResidentFactory::class)]
-class Resident extends Model
+class Resident extends Model implements AuthenticatableContract, AuthorizableContract
 {
     /** @use HasFactory<ResidentFactory> */
-    use Auditable, BelongsToTenant, HasAttachments, HasFactory, HasUlids, SoftDeletes;
+    use Auditable, Authenticatable, Authorizable, BelongsToTenant, HasAttachments, HasFactory, HasUlids, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -65,6 +71,14 @@ class Resident extends Model
     protected $attributes = [
         'is_flagged' => false,
     ];
+
+    /**
+     * Portal logins use a one-time code, never a password.
+     */
+    public function getAuthPassword(): string
+    {
+        return '';
+    }
 
     protected static function booted(): void
     {

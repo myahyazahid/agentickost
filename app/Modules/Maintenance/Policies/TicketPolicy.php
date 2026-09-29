@@ -3,13 +3,18 @@
 namespace App\Modules\Maintenance\Policies;
 
 use App\Modules\Access\Models\User;
+use App\Modules\Lease\Models\Contract;
+use App\Modules\Lease\Models\Resident;
+use App\Modules\Lease\Support\PortalAccess;
 use App\Modules\Maintenance\Enums\MaintenancePermission;
 use App\Modules\Maintenance\Models\Ticket;
 use App\Modules\Property\Models\Property;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
- * Staff report tickets for their properties. Owners and managers assign,
- * reject, and confirm them; the assigned staff member does the work.
+ * Staff report tickets for their properties, and residents report them from
+ * the portal for the place they live (FR-PRT-04). Owners and managers
+ * assign, reject, and confirm them; the assigned staff member does the work.
  */
 final class TicketPolicy
 {
@@ -31,6 +36,11 @@ final class TicketPolicy
     public function reportIn(User $user, Property $property): bool
     {
         return $user->can(MaintenancePermission::ReportTickets->value) && $property->isAccessibleBy($user);
+    }
+
+    public function reportFromPortal(Authenticatable $account, Contract $contract): bool
+    {
+        return $account instanceof Resident && PortalAccess::for($account)->livesIn($contract);
     }
 
     public function manage(User $user, Ticket $ticket): bool

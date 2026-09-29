@@ -46,6 +46,23 @@ final readonly class Actor
         return new self(ActorType::PlatformAdmin, (string) $admin->getAuthIdentifier(), $ipAddress, $impersonationLogId, $user);
     }
 
+    /**
+     * A resident logged in to the portal (FR-PRT-01).
+     */
+    public static function resident(Authenticatable $resident, ?string $ipAddress = null): self
+    {
+        return new self(ActorType::Resident, (string) $resident->getAuthIdentifier(), $ipAddress, user: $resident);
+    }
+
+    /**
+     * Someone paying for a room they do not live in, logged in to the portal
+     * (FR-PRT-07).
+     */
+    public static function payer(Authenticatable $payer, ?string $ipAddress = null): self
+    {
+        return new self(ActorType::Payer, (string) $payer->getAuthIdentifier(), $ipAddress, user: $payer);
+    }
+
     public static function agent(string $agentId): self
     {
         return new self(ActorType::Agent, $agentId);

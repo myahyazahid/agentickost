@@ -20,7 +20,7 @@ final class ReadOnlyBanner
 
     public function render(): ?Htmlable
     {
-        if (Filament::getCurrentPanel()?->getId() !== 'app' || ! $this->tenants->has()) {
+        if (Filament::getCurrentPanel()?->getId() !== 'app' || ! $this->tenants->has() || ! config('agentickost.subscription_enforced')) {
             return null;
         }
 

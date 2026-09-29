@@ -8,12 +8,15 @@ use App\Support\Backup\Commands\BackupBinaryLogs;
 use App\Support\Backup\Commands\BackupDatabase;
 use App\Support\Backup\Commands\TestRestore;
 use App\Support\Backup\MysqlClient;
+use App\Support\Messaging\LogMessageChannel;
+use App\Support\Messaging\MessageChannel;
 use App\Support\Modules\ModuleRegistry;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Log\Context\Repository;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use InvalidArgumentException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +30,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->app->singleton(MysqlClient::class, fn (): MysqlClient => MysqlClient::fromConfig());
+
+        $this->app->singleton(MessageChannel::class, fn (): MessageChannel => match (config('agentickost.whatsapp.driver')) {
+            'log' => new LogMessageChannel,
+            default => throw new InvalidArgumentException('AGENTICKOST_WHATSAPP_DRIVER tidak dikenal. Pilihan yang tersedia: log.'),
+        });
     }
 
     /**

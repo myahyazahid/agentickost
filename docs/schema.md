@@ -323,7 +323,7 @@ Indeks: `UNIQUE(tenant_id, property_id, user_id)`. Tanpa `updated_at`.
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `actor_type` | `VARCHAR(32)` | `user`, `resident`, `system`, `agent`, `platform_admin` |
+| `actor_type` | `VARCHAR(32)` | `user`, `resident`, `payer`, `system`, `agent`, `platform_admin` |
 | `actor_id` | `CHAR(26)` NULL | NULL untuk `system` |
 | `event` | `VARCHAR(80)` | Contoh `invoice.voided`, `penalty.waived` |
 | `subject_type` | `VARCHAR(80)` | Nama model |
@@ -350,6 +350,8 @@ Login portal penghuni dan pembayar (FR-PRT-01).
 | `consumed_at` | `TIMESTAMP` NULL | |
 
 Indeks: `INDEX(tenant_id, phone, purpose)`.
+
+Kode 6 angka berlaku 5 menit, sekali pakai, dan mati setelah 5 kali salah. Meminta kode baru membuat kode lama tidak berlaku. Permintaan dibatasi per nomor dan per alamat IP (modul Portal).
 
 ### 4.6 `attachments` 🏠 — P0
 
@@ -517,6 +519,7 @@ Penghuni juga menjadi entitas autentikasi portal (guard `resident`, login OTP).
 | `internal_notes` | `TEXT` NULL | Tidak terlihat oleh penghuni (FR-PNH-06) |
 | `is_flagged` | `BOOLEAN` | Penanda "tidak disarankan", hanya dalam tenant ini |
 | `anonymized_at` | `TIMESTAMP` NULL | Diisi saat dianonimkan (NFR-PDP-02) |
+| `remember_token` | `VARCHAR(100)` NULL | Tetap masuk portal di HP |
 | `deleted_at` | `TIMESTAMP` NULL | |
 
 Indeks: `INDEX(tenant_id, phone)`, `INDEX(tenant_id, identity_number_hash)`.
@@ -535,6 +538,7 @@ Pihak yang ditagih (FR-PNH-03). Jika penghuni membayar sendiri, `resident_id` te
 | `email` | `VARCHAR(150)` NULL | |
 | `relation` | `VARCHAR(16)` | `self`, `parent`, `guardian`, `company`, `other` |
 | `anonymized_at` | `TIMESTAMP` NULL | |
+| `remember_token` | `VARCHAR(100)` NULL | Pembayar bukan penghuni masuk portal di guard `payer` (FR-PRT-07) |
 
 Indeks: `INDEX(tenant_id, phone)`.
 
@@ -1291,8 +1295,10 @@ Indeks: `UNIQUE(tenant_id, idempotency_key)` — pengingat tidak terkirim ganda 
 | `property_id` | `CHAR(26)` | FK |
 | `title` | `VARCHAR(150)` | |
 | `body` | `TEXT` | |
-| `published_at` | `TIMESTAMP` NULL | |
-| `created_by` | `CHAR(26)` | |
+| `published_at` | `TIMESTAMP` NULL | NULL = draf; tampil di portal sejak waktu ini |
+| `created_by` | `CHAR(26)` NULL | FK `users` |
+
+Dibuat di M1.5.3 untuk portal penghuni (FR-PRT-05). Siaran lewat WhatsApp (FR-NTF-04) menyusul di M1.5.4.
 
 ### 12.5 `conversations` 🏠 — F3
 
@@ -1465,8 +1471,8 @@ Urutan mengikuti dependensi foreign key dan milestone roadmap.
 | 11a | `platform_settings`, `staff_invitations`, kolom `users.email_verified_at`, `tenants.frozen_reason`, `impersonation_logs.impersonated_user_id` | M1.9 |
 | 12 | `plans`, `subscriptions`, `subscription_invoices`, `usage_counters` | M1.5.1 |
 | 13 | `gateway_credentials`, `gateway_payment_requests`, `gateway_webhook_logs` | M1.5.2 |
-| 14 | `otp_codes` | M1.5.3 |
-| 15 | `message_templates`, `reminder_rules`, `notification_logs`, `announcements` | M1.5.4 |
+| 14 | `otp_codes`, `announcements` | M1.5.3 |
+| 15 | `message_templates`, `reminder_rules`, `notification_logs` | M1.5.4 |
 | 16 | `leads`, `lead_activities`, `bookings`, `waitlists` | M2.1 |
 | 17 | `assets`, `vendors`, `maintenance_schedules` | M2.2 |
 | 18 | `conversations`, `messages`, `agent_runs`, `agent_tool_calls`, `approval_requests` | M3.1 |

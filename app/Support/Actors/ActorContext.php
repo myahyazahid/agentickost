@@ -100,6 +100,16 @@ final class ActorContext
             return;
         }
 
+        if (in_array($actor->type, [ActorType::Resident, ActorType::Payer], true)) {
+            if ($actor->user === null) {
+                throw new AuthorizationException('Sesi portal tidak ditemukan.');
+            }
+
+            Gate::forUser($actor->user)->authorize($ability, $arguments);
+
+            return;
+        }
+
         if ($actor->type !== ActorType::User) {
             throw new AuthorizationException("Otorisasi untuk aktor {$actor->type->value} belum tersedia.");
         }

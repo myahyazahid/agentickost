@@ -288,14 +288,14 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.5.3 Portal Penghuni — `PRT`
 
-- [ ] Login dengan OTP WhatsApp (FR-PRT-01)
-- [ ] Tagihan, riwayat bayar, kontrak, saldo deposit (FR-PRT-02)
-- [ ] Bayar lewat payment gateway atau unggah bukti (FR-PRT-03)
-- [ ] Buat dan pantau tiket (FR-PRT-04)
-- [ ] Pengumuman properti (FR-PRT-05)
-- [ ] Instalasi sebagai PWA (FR-PRT-06)
-- [ ] Akses terbatas untuk pembayar non-penghuni (FR-PRT-07)
-- [ ] Test isolasi: penghuni tidak dapat melihat data penghuni lain, bahkan di tenant yang sama
+- [ ] Login dengan OTP WhatsApp (FR-PRT-01): alur kode selesai lewat `MessageChannel`; pengiriman WhatsApp sungguhan menunggu penyedia (M1.5.4). Sampai saat itu driver `log` menulis kode ke log
+- [x] Tagihan, riwayat bayar, kontrak, saldo deposit (FR-PRT-02)
+- [ ] Bayar lewat payment gateway atau unggah bukti (FR-PRT-03): unggah bukti selesai dan masuk antrean verifikasi; pembayaran lewat gateway menunggu M1.5.2
+- [x] Buat dan pantau tiket (FR-PRT-04)
+- [x] Pengumuman properti (FR-PRT-05): ditulis staf di panel, tampil di portal; siaran WhatsApp di M1.5.4
+- [x] Instalasi sebagai PWA (FR-PRT-06): ikon memakai inisial usaha sampai owner bisa mengunggah ikon aplikasi
+- [x] Akses terbatas untuk pembayar non-penghuni (FR-PRT-07)
+- [x] Test isolasi: penghuni tidak dapat melihat data penghuni lain, bahkan di tenant yang sama
 
 ### M1.5.4 Notifikasi — `NTF`
 
@@ -319,7 +319,7 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 ### M1.5.6 Keamanan & Legal
 
 - [x] Autentikasi dua faktor untuk Owner, Akuntan, dan super admin (FR-USR-05, NFR-SEC-05): aplikasi autentikator dengan kode pemulihan; staf lain boleh memasang dari profil
-- [ ] Rate limiting login, OTP, dan endpoint publik (NFR-SEC-03): login (per alamat IP dan per akun) dan endpoint publik selesai; OTP menyusul bersama portal penghuni (M1.5.3)
+- [x] Rate limiting login, OTP, dan endpoint publik (NFR-SEC-03): login per alamat IP dan per akun, kode OTP per nomor dan per alamat IP, tautan dokumen publik
 - [ ] Syarat layanan, kebijakan privasi, dan perjanjian pemrosesan data, ditinjau pihak yang memahami hukum (NFR-PDP-01)
 - [ ] Mekanisme permintaan hapus dan ekspor data pribadi penghuni (NFR-PDP-03)
 - [ ] Job anonimisasi sesuai retensi (NFR-PDP-02)

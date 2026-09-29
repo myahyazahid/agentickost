@@ -13,6 +13,7 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -90,9 +91,18 @@ class BusinessProfile extends Page
                             ->preventFilePathTampering(allowFilePathUsing: fn (string $file): bool => $file === app(TenantContext::class)->tenant()->logo_path),
                         ColorPicker::make('brand_color')
                             ->label('Warna aksen')
-                            ->helperText('Dipakai untuk garis dan judul di dokumen. Kosongkan untuk warna bawaan.')
+                            ->helperText('Dipakai untuk garis dan judul di dokumen, dan tombol di portal penghuni. Kosongkan untuk warna bawaan.')
                             ->hex()
                             ->regex('/^#[0-9a-fA-F]{6}$/'),
+                    ]),
+                Section::make('Portal penghuni')
+                    ->description('Bagikan tautan ini ke penghuni dan pembayar. Mereka masuk dengan nomor HP yang tercatat di kontrak.')
+                    ->schema([
+                        TextEntry::make('portal_url')
+                            ->hiddenLabel()
+                            ->state(fn (): string => route('portal.login', ['tenant' => app(TenantContext::class)->tenant()->slug]))
+                            ->copyable()
+                            ->copyMessage('Tautan disalin'),
                     ]),
             ])
             ->statePath('data');

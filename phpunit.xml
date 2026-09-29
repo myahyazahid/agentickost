@@ -37,5 +37,8 @@
         <env name="SENTRY_LARAVEL_DSN" value=""/>
         <env name="IDENTITY_HASH_KEY" value="testing-identity-hash-key"/>
         <env name="AGENTICKOST_TWO_FACTOR_REQUIRED" value="false"/>
+        <env name="AGENTICKOST_PORTAL_OTP_REQUIRED" value="true"/>
+        <env name="AGENTICKOST_SUBSCRIPTION_ENFORCED" value="true"/>
+        <env name="AGENTICKOST_WHATSAPP_DRIVER" value="log"/>
     </php>
 </phpunit>

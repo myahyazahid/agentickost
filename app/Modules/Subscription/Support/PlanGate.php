@@ -20,7 +20,7 @@ final class PlanGate implements SubscriptionGate
 
     public function ensureWritable(): void
     {
-        if (! $this->tenants->has()) {
+        if (! $this->enforced()) {
             return;
         }
 
@@ -31,7 +31,7 @@ final class PlanGate implements SubscriptionGate
 
     public function ensureCanAdd(string $resource, int $count = 1, string $errorKey = 'plan'): void
     {
-        if (! $this->tenants->has()) {
+        if (! $this->enforced()) {
             return;
         }
 
@@ -51,7 +51,7 @@ final class PlanGate implements SubscriptionGate
 
     public function allows(string $feature): bool
     {
-        if (! $this->tenants->has()) {
+        if (! $this->enforced()) {
             return true;
         }
 
@@ -59,5 +59,14 @@ final class PlanGate implements SubscriptionGate
         $case = PlanFeature::tryFrom($feature);
 
         return $plan === null || ($case !== null && $plan->hasFeature($case));
+    }
+
+    /**
+     * Only inside a tenant, and unless switched off for local development
+     * (config agentickost.subscription_enforced).
+     */
+    private function enforced(): bool
+    {
+        return $this->tenants->has() && config('agentickost.subscription_enforced');
     }
 }

@@ -17,8 +17,9 @@ use Illuminate\Console\Command;
 
 /**
  * Moves every tenant's subscription along its lifecycle (PRD §9.6) and
- * tells the owners what changed. Runs daily and is safe to repeat. Frozen
- * tenants are skipped: only a payment opens them again.
+ * tells the owners what changed. Runs hourly and is safe to repeat. Frozen
+ * tenants are skipped: only a payment opens them again. Does nothing when
+ * subscriptions are not enforced (local development).
  */
 final class AdvanceSubscriptions extends Command
 {
@@ -28,6 +29,12 @@ final class AdvanceSubscriptions extends Command
 
     public function handle(ActorContext $actors, TenantContext $tenants, AdvanceSubscription $advance): int
     {
+        if (! config('agentickost.subscription_enforced')) {
+            $this->components->info('Langganan tidak ditegakkan (AGENTICKOST_SUBSCRIPTION_ENFORCED=false), tidak ada yang diubah.');
+
+            return self::SUCCESS;
+        }
+
         $changed = 0;
         $runs = new IsolatedRuns;
 
