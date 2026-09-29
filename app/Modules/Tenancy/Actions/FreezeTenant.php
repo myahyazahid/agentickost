@@ -5,13 +5,14 @@ namespace App\Modules\Tenancy\Actions;
 use App\Modules\Tenancy\Events\TenantChangedByPlatform;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Closes a tenant's access (FR-TNT-06, PRD §9.6): its staff can no longer
  * log in and scheduled billing skips it, but its data stays.
  */
-final class FreezeTenant extends Action
+final class FreezeTenant extends Action implements AllowedWhenReadOnly
 {
     /**
      * @param  array<string, mixed>  $input

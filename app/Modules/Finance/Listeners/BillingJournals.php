@@ -32,7 +32,7 @@ final class BillingJournals
     {
         $invoice = $event->invoice;
 
-        // Opening arrears were earned before KostPilot; the opening balance
+        // Opening arrears were earned before Agentic Kost; the opening balance
         // journal books them against opening equity (FR-ONB-05).
         if ($invoice->type === InvoiceType::Opening) {
             return;

@@ -2,9 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Modules\Access\Http\Middleware\RequireTwoFactor;
 use App\Modules\Tenancy\Http\Middleware\SetPlatformActor;
+use App\Support\Filament\Auth\EditProfile;
+use App\Support\Filament\Auth\Login;
 use App\Support\Filament\PanelTheme;
 use App\Support\Modules\DiscoversModuleComponents;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -22,7 +26,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 /**
- * Panel for KostPilot super admins, on the `platform` guard.
+ * Panel for Agentic Kost super admins, on the `platform` guard.
  */
 class AdminPanelProvider extends PanelProvider
 {
@@ -35,7 +39,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->authGuard('platform')
             ->authPasswordBroker('platform_admins')
-            ->login()
+            ->login(Login::class)
+            ->profile(EditProfile::class, isSimple: false)
+            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()], isRequired: true)
+            ->multiFactorAuthenticationRequiredMiddlewareName(RequireTwoFactor::class)
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\Filament\Admin\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->pages([

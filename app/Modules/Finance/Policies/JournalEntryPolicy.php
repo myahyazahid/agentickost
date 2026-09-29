@@ -7,7 +7,8 @@ use App\Modules\Finance\Enums\FinancePermission;
 use App\Modules\Finance\Models\JournalEntry;
 
 /**
- * Journals are only read: they are posted by the system (FR-ACC-02).
+ * Journals are posted by the system (FR-ACC-02). Accountants may add a
+ * manual journal and reverse it; a journal is never edited (FR-ACC-05).
  */
 final class JournalEntryPolicy
 {
@@ -19,5 +20,15 @@ final class JournalEntryPolicy
     public function view(User $user, JournalEntry $entry): bool
     {
         return $this->viewAny($user);
+    }
+
+    public function createManual(User $user): bool
+    {
+        return $user->can(FinancePermission::PostManualJournals->value);
+    }
+
+    public function reverseManual(User $user, JournalEntry $entry): bool
+    {
+        return $user->can(FinancePermission::PostManualJournals->value);
     }
 }

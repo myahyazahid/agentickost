@@ -5,6 +5,7 @@ namespace App\Modules\Access\Actions;
 use App\Modules\Access\Enums\Role;
 use App\Modules\Access\Permissions\PermissionRegistry;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role as RoleModel;
 
@@ -15,7 +16,7 @@ use Spatie\Permission\Models\Role as RoleModel;
  * Internal provisioning: called when a tenant is created and by
  * `access:sync-roles` after a deploy, not by users, so it does not authorize.
  */
-final class SyncTenantRoles extends Action
+final class SyncTenantRoles extends Action implements AllowedWhenReadOnly
 {
     public function __construct(private readonly PermissionRegistry $permissions) {}
 

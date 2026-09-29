@@ -7,12 +7,14 @@ use App\Modules\Documents\Enums\AttachmentCollection;
 use App\Modules\Documents\Models\Attachment;
 use App\Modules\Lease\Models\Resident;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 
 /**
  * Shows a resident's identity number and documents to an authorized role,
- * and records every look in the audit log (FR-PNH-02, NFR-PDP-04).
+ * and records every look in the audit log (FR-PNH-02, NFR-PDP-04). Allowed
+ * in read-only mode, since looking changes no data.
  */
-final class RevealResidentIdentity extends Action
+final class RevealResidentIdentity extends Action implements AllowedWhenReadOnly
 {
     public function __construct(private readonly AuditLogger $audit) {}
 

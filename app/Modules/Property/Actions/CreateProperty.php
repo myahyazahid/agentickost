@@ -8,6 +8,7 @@ use App\Modules\Property\Enums\GenderPolicy;
 use App\Modules\Property\Models\Property;
 use App\Modules\Tenancy\TenantContext;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\SubscriptionGate;
 use App\Support\Timezone;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,7 @@ final class CreateProperty extends Action
     public function __construct(
         private readonly TenantContext $tenants,
         private readonly AttachmentSync $attachments,
+        private readonly SubscriptionGate $subscription,
     ) {}
 
     /**
@@ -27,6 +29,7 @@ final class CreateProperty extends Action
         $this->authorize('create', Property::class);
 
         $data = $this->validate($input, self::rules($this->tenants->id()));
+        $this->subscription->ensureCanAdd(SubscriptionGate::PROPERTIES, errorKey: 'name');
 
         return $this->transaction(function () use ($data): Property {
             $property = Property::create(Arr::except($data, 'photos'));

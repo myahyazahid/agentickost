@@ -8,6 +8,7 @@
 
 use App\Modules\Access\Concerns\Auditable;
 use App\Modules\Access\Models\AuditLog;
+use App\Modules\Subscription\Models\Plan;
 use App\Modules\Tenancy\Exceptions\MissingTenantContext;
 use App\Modules\Tenancy\Exceptions\TenantMismatch;
 use App\Modules\Tenancy\Models\ImpersonationLog;
@@ -88,7 +89,7 @@ it('refuses to query without a tenant context', function (string $model) {
 })->with('tenant models')->throws(MissingTenantContext::class);
 
 test('every model is either tenant data or a known platform model', function () {
-    $platformModels = [Tenant::class, PlatformAdmin::class, ImpersonationLog::class];
+    $platformModels = [Tenant::class, PlatformAdmin::class, ImpersonationLog::class, Plan::class];
 
     $unscoped = array_diff(TenantModels::all(), TenantModels::scoped(), $platformModels);
 

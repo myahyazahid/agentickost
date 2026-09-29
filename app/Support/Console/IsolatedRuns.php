@@ -2,6 +2,7 @@
 
 namespace App\Support\Console;
 
+use App\Support\Subscriptions\ReadOnlyMode;
 use Closure;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -27,6 +28,8 @@ final class IsolatedRuns
     {
         try {
             $work();
+        } catch (ReadOnlyMode) {
+            // A read-only tenant is skipped on purpose (FR-SUB-04), not a failure.
         } catch (Throwable $exception) {
             report(self::reportable($exception));
             $this->failures++;

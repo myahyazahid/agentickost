@@ -1,4 +1,4 @@
-# Skema Database — KostPilot
+# Skema Database — Agentic Kost
 
 | Atribut | Nilai |
 |---|---|
@@ -159,6 +159,7 @@ Indeks: `UNIQUE(slug)`.
 |---|---|---|
 | `code` | `VARCHAR(40)` | Unik |
 | `name` | `VARCHAR(80)` | |
+| `description` | `TEXT` NULL | |
 | `monthly_price_amount` | `BIGINT` | |
 | `yearly_price_amount` | `BIGINT` NULL | |
 | `max_rooms` | `INT` NULL | NULL = tanpa batas |
@@ -174,27 +175,39 @@ Indeks: `UNIQUE(slug)`.
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
-| `plan_id` | `CHAR(26)` | FK `plans` |
+| `plan_id` | `CHAR(26)` NULL | FK `plans`; NULL selama trial sebelum owner memilih paket |
 | `status` | `VARCHAR(32)` | `trial`, `active`, `grace`, `read_only`, `frozen`, `cancelled` (PRD §9.6) |
-| `billing_cycle` | `VARCHAR(16)` | `monthly`, `yearly` |
-| `current_period_start` | `DATE` | |
-| `current_period_end` | `DATE` | |
-| `grace_ends_at` | `TIMESTAMP` NULL | |
+| `billing_cycle` | `VARCHAR(16)` NULL | `monthly`, `yearly` |
+| `current_period_start` | `DATE` NULL | Awal periode yang sudah dibayar |
+| `current_period_end` | `DATE` NULL | Akhir periode yang sudah dibayar |
+| `grace_ends_at` | `TIMESTAMP` NULL | Akhir masa tenggang, tengah malam zona waktu tenant |
+| `read_only_since` | `TIMESTAMP` NULL | Awal mode baca saja; dasar hitung pembekuan |
 | `cancelled_at` | `TIMESTAMP` NULL | |
 
-Indeks: `UNIQUE(tenant_id)` — satu langganan aktif per tenant.
+Indeks: `UNIQUE(tenant_id)` — satu langganan per tenant; `INDEX(status)`.
+
+Baris dibuat saat pertama dibutuhkan (halaman Langganan atau proses harian `subscriptions:advance`), dengan status `trial`. Akhir trial tetap di `tenants.trial_ends_at`. Lama masa tenggang dan masa baca saja diatur di `platform_settings` (`subscription_grace_days`, bawaan 7; `subscription_read_only_days`, bawaan 30).
 
 ### 3.4 `subscription_invoices` 🏠 — P1
 
 | Kolom | Tipe | Keterangan |
 |---|---|---|
 | `subscription_id` | `CHAR(26)` | FK |
-| `number` | `VARCHAR(40)` | Unik global |
+| `plan_id` | `CHAR(26)` | FK `plans`; paket yang aktif setelah tagihan dibayar |
+| `number` | `VARCHAR(40)` | Unik global, `AK/LGN/{tahun}/{bulan}/{urut}` |
+| `billing_cycle` | `VARCHAR(16)` | |
+| `period_start` | `DATE` | |
+| `period_end` | `DATE` | |
 | `amount` | `BIGINT` | |
 | `status` | `VARCHAR(32)` | `unpaid`, `paid`, `void` |
 | `due_date` | `DATE` | |
 | `paid_at` | `TIMESTAMP` NULL | |
-| `gateway_reference` | `VARCHAR(100)` NULL | |
+| `gateway_reference` | `VARCHAR(100)` NULL | Diisi saat payment gateway platform tersedia |
+| `payment_note` | `VARCHAR(255)` NULL | Catatan transfer dari super admin |
+| `confirmed_by` | `CHAR(26)` NULL | FK `platform_admins`; yang mengonfirmasi transfer manual |
+| `voided_at` | `TIMESTAMP` NULL | |
+
+Indeks: `INDEX(tenant_id, status)`, `INDEX(status, due_date)`.
 
 ### 3.5 `platform_admins` — P0
 
@@ -204,6 +217,7 @@ Indeks: `UNIQUE(tenant_id)` — satu langganan aktif per tenant.
 | `email` | `VARCHAR(150)` | Unik |
 | `password` | `VARCHAR(255)` | Hash |
 | `two_factor_secret` 🔒 | `TEXT` NULL | Wajib aktif (NFR-SEC-05) |
+| `two_factor_recovery_codes` 🔒 | `TEXT` NULL | Kode pemulihan, JSON terenkripsi |
 | `two_factor_confirmed_at` | `TIMESTAMP` NULL | |
 
 ### 3.6 `impersonation_logs` — P0
@@ -231,7 +245,7 @@ Pengaturan tingkat platform yang diubah super admin. Bukan tabel tenant.
 | `key` | `VARCHAR(80)` | Unik. Contoh: `trial_days` |
 | `value` | `JSON` | |
 
-Bila `trial_days` belum diisi, dipakai `config('kostpilot.trial_days')` (default 14).
+Bila `trial_days` belum diisi, dipakai `config('agentickost.trial_days')` (default 14).
 
 ### 3.7 `document_sequences` 🏠 — P0
 
@@ -262,7 +276,8 @@ Staf dan owner. Penghuni **tidak** disimpan di sini (lihat §6.1).
 | `phone` | `VARCHAR(20)` NULL | E.164 |
 | `email_verified_at` | `TIMESTAMP` NULL | NULL hanya untuk owner yang mendaftar sendiri dan belum membuka tautan verifikasi (FR-TNT-01); akun dari operator atau undangan langsung terverifikasi |
 | `password` | `VARCHAR(255)` | Hash |
-| `two_factor_secret` 🔒 | `TEXT` NULL | |
+| `two_factor_secret` 🔒 | `TEXT` NULL | Wajib untuk Owner dan Akuntan (FR-USR-05) |
+| `two_factor_recovery_codes` 🔒 | `TEXT` NULL | Kode pemulihan, JSON terenkripsi |
 | `two_factor_confirmed_at` | `TIMESTAMP` NULL | |
 | `is_active` | `BOOLEAN` | |
 | `last_login_at` | `TIMESTAMP` NULL | |
@@ -550,7 +565,7 @@ Indeks: `INDEX(tenant_id, phone)`.
 | `renewed_from_contract_id` | `CHAR(26)` NULL | FK `contracts`, untuk perpanjangan |
 | `clauses` | `TEXT` NULL | |
 | `created_by` | `CHAR(26)` | FK `users` |
-| `imported_at` | `TIMESTAMP` NULL | Terisi untuk kontrak yang sudah berjalan sebelum memakai KostPilot dan diimpor saat onboarding (FR-ONB-02). Deposit-nya masuk lewat saldo awal, tidak ditagih |
+| `imported_at` | `TIMESTAMP` NULL | Terisi untuk kontrak yang sudah berjalan sebelum memakai Agentic Kost dan diimpor saat onboarding (FR-ONB-02). Deposit-nya masuk lewat saldo awal, tidak ditagih |
 
 Indeks: `UNIQUE(tenant_id, number)`, `INDEX(tenant_id, status, next_period_start)`, `INDEX(tenant_id, room_id, status)`.
 
@@ -1037,7 +1052,7 @@ Indeks: `UNIQUE(tenant_id, code)`, `INDEX(tenant_id, subtype)`, `UNIQUE(tenant_i
 
 Indeks: `UNIQUE(tenant_id, year, month)`.
 
-Periode dibuat terbuka saat jurnal pertama bertanggal di bulan itu. Menutup dan membuka ulang periode dikerjakan bersama FR-ACC-08 (M1.5.5).
+Periode dibuat terbuka saat jurnal pertama bertanggal di bulan itu. Owner dan Akuntan menutup bulan yang sudah berakhir; hanya Owner yang membuka ulang, dengan alasan (FR-ACC-08). Jurnal bertanggal di periode tertutup ditolak oleh `JournalPoster`.
 
 ### 10.3 `journal_entries` 🏠 — P0
 
@@ -1049,7 +1064,7 @@ Tidak dapat diubah atau dihapus. Koreksi dengan entri pembalikan.
 | `property_id` | `CHAR(26)` NULL | |
 | `number` | `VARCHAR(40)` | |
 | `entry_date` | `DATE` | |
-| `event` | `VARCHAR(40)` | `invoice_issued`, `invoice_voided`, `penalty_accrued`, `penalty_waived`, `credit_note_issued`, `payment_verified`, `payment_reversed`, `credit_applied`, `allocation_released`, `deposit_deducted`, `deposit_refunded`, `deposit_transferred`, `cash_handed_over`, `expense_recorded`, `expense_voided`, `opening_balance` (PRD §8.14) |
+| `event` | `VARCHAR(40)` | `invoice_issued`, `invoice_voided`, `penalty_accrued`, `penalty_waived`, `credit_note_issued`, `payment_verified`, `payment_reversed`, `credit_applied`, `credit_refunded`, `allocation_released`, `deposit_deducted`, `deposit_refunded`, `deposit_transferred`, `cash_handed_over`, `expense_recorded`, `expense_voided`, `opening_balance` (PRD §8.14), `manual` (jurnal manual, FR-ACC-05) |
 | `description` | `VARCHAR(255)` | |
 | `source_type` | `VARCHAR(80)` NULL | Polymorphic ke dokumen sumber |
 | `source_id` | `CHAR(26)` NULL | |

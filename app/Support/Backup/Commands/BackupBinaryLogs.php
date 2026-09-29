@@ -22,7 +22,7 @@ final class BackupBinaryLogs extends Command
 
     public function handle(MysqlClient $mysql, BackupStore $store): int
     {
-        if (! config('kostpilot.backup.binary_logs')) {
+        if (! config('agentickost.backup.binary_logs')) {
             $this->components->warn('Backup binary log dimatikan (BACKUP_BINARY_LOGS=false).');
 
             return self::SUCCESS;

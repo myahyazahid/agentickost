@@ -136,11 +136,11 @@ it('keeps the onboarding pages to the owner', function () {
 });
 
 it('shows the checklist on the dashboard until every step is done', function () {
-    $this->get(Dashboard::getUrl())->assertOk()->assertSee('Persiapan KostPilot');
+    $this->get(Dashboard::getUrl())->assertOk()->assertSee('Persiapan Agentic Kost');
 
     Livewire::test(OnboardingChecklist::class)
         ->assertSee(['0 dari 5 langkah selesai', 'Siapkan properti', 'Posting saldo awal']);
 
     loginAs(staff(Role::Manager, $this->owner->tenant()->firstOrFail()));
-    $this->get(Dashboard::getUrl())->assertOk()->assertDontSee('Persiapan KostPilot');
+    $this->get(Dashboard::getUrl())->assertOk()->assertDontSee('Persiapan Agentic Kost');
 });

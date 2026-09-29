@@ -108,19 +108,19 @@ it('copies every closed binary log once, leaving the one MySQL is writing', func
 });
 
 it('restores the latest dump into a scratch database, checks it, and drops it', function () {
-    config(['kostpilot.backup.restore_database' => 'kostpilot_restore_check']);
+    config(['agentickost.backup.restore_database' => 'agentickost_restore_check']);
     Storage::disk('backups')->put('database/2026/10/agentickost-20261005-190000.sql.gz', (string) gzencode('-- dump'));
     $ran = fakeMysqlTools(queries: restoredCopy('0'));
 
     $this->artisan('backup:restore-test')->expectsOutputToContain('berhasil dipulihkan')->assertSuccessful();
 
     $lines = collect($ran->getArrayCopy())->map(fn (array $command): string => implode(' ', $command));
-    expect($lines->first(fn (string $line): bool => str_contains($line, 'CREATE DATABASE')))->toContain('`kostpilot_restore_check`')
-        ->and($lines->last())->toContain('DROP DATABASE IF EXISTS `kostpilot_restore_check`');
+    expect($lines->first(fn (string $line): bool => str_contains($line, 'CREATE DATABASE')))->toContain('`agentickost_restore_check`')
+        ->and($lines->last())->toContain('DROP DATABASE IF EXISTS `agentickost_restore_check`');
 });
 
 it('fails the restore test when the restored books do not balance', function () {
-    config(['kostpilot.backup.restore_database' => 'kostpilot_restore_check']);
+    config(['agentickost.backup.restore_database' => 'agentickost_restore_check']);
     Storage::disk('backups')->put('database/2026/10/agentickost-20261005-190000.sql.gz', (string) gzencode('-- dump'));
     fakeMysqlTools(queries: restoredCopy('3'));
 
@@ -128,7 +128,7 @@ it('fails the restore test when the restored books do not balance', function () 
 });
 
 it('never restores over the application database', function () {
-    config(['kostpilot.backup.restore_database' => config('database.connections.mysql.database')]);
+    config(['agentickost.backup.restore_database' => config('database.connections.mysql.database')]);
     fakeMysqlTools();
 
     expect(fn () => $this->artisan('backup:restore-test')->run())->toThrow(RuntimeException::class, 'bukan database aplikasi');

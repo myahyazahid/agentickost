@@ -5,12 +5,13 @@ namespace App\Modules\Tenancy\Actions;
 use App\Modules\Tenancy\Events\TenantChangedByPlatform;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 use Illuminate\Validation\ValidationException;
 
 /**
  * Opens a frozen tenant again (FR-TNT-06).
  */
-final class UnfreezeTenant extends Action
+final class UnfreezeTenant extends Action implements AllowedWhenReadOnly
 {
     public function handle(Tenant $tenant): Tenant
     {

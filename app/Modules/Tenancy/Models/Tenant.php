@@ -21,6 +21,8 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $name
  * @property string $slug
+ * @property string|null $logo_path
+ * @property string|null $brand_color
  * @property string $default_timezone
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $frozen_at

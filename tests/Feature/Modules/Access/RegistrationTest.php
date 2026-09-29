@@ -73,7 +73,7 @@ it('keeps the panel closed until the email is verified, then opens the dashboard
     $this->get(Filament::getPanel('app')->getVerifyEmailUrl($owner))->assertRedirect();
 
     expect($owner->refresh()->hasVerifiedEmail())->toBeTrue();
-    $this->get('/app')->assertOk()->assertSee(['Persiapan KostPilot', 'Masa trial: sisa 14 hari']);
+    $this->get('/app')->assertOk()->assertSee(['Persiapan Agentic Kost', 'Masa trial: sisa 14 hari']);
 });
 
 it('gives new tenants the trial length the super admin set', function () {

@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Carries in a contract that was already running before the tenant started
- * using KostPilot (FR-ONB-02). It is created and activated like any other
+ * using Agentic Kost (FR-ONB-02). It is created and activated like any other
  * contract, but billing starts at the first period the owner has not billed
  * yet, and its deposit is never billed: the deposit held comes in with the
  * opening balance (FR-ONB-04).

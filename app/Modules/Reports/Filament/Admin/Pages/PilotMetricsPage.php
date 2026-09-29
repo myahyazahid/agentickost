@@ -53,7 +53,7 @@ class PilotMetricsPage extends Page implements HasTable
 
     public function getSubheading(): string
     {
-        return 'Ketepatan bayar: tagihan sewa yang jatuh tempo di bulan ini dan lunas paling lambat pada tanggal jatuh temponya. Waktu verifikasi: median lama pembayaran menunggu diverifikasi. Pembandingnya, kondisi sebelum memakai KostPilot, dicatat dari wawancara owner.';
+        return 'Ketepatan bayar: tagihan sewa yang jatuh tempo di bulan ini dan lunas paling lambat pada tanggal jatuh temponya. Waktu verifikasi: median lama pembayaran menunggu diverifikasi. Pembandingnya, kondisi sebelum memakai Agentic Kost, dicatat dari wawancara owner.';
     }
 
     public function mount(): void

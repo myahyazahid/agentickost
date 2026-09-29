@@ -187,7 +187,7 @@ class Contract extends Model
 
     /**
      * Whether the contract was already running before the tenant started
-     * using KostPilot. Its deposit comes in with the opening balance.
+     * using Agentic Kost. Its deposit comes in with the opening balance.
      */
     public function isImported(): bool
     {

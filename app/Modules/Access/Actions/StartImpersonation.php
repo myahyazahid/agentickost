@@ -10,6 +10,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\TenantContext;
 use App\Support\Actions\Action;
 use App\Support\Actors\ActorContext;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -17,7 +18,7 @@ use Illuminate\Validation\ValidationException;
  * required; the session is logged, written into the tenant's audit log, and
  * listed for the owner. The admin works as the tenant's first active owner.
  */
-final class StartImpersonation extends Action
+final class StartImpersonation extends Action implements AllowedWhenReadOnly
 {
     public function __construct(
         private readonly ActorContext $actors,

@@ -18,7 +18,7 @@ final class PlatformSettings
     {
         $days = self::get(self::TRIAL_DAYS);
 
-        return is_int($days) ? $days : (int) config('kostpilot.trial_days', 14);
+        return is_int($days) ? $days : (int) config('agentickost.trial_days', 14);
     }
 
     public static function get(string $key): mixed

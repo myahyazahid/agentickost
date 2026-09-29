@@ -21,7 +21,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     Filament::setCurrentPanel(Filament::getPanel('admin'));
     $this->travelTo('2026-10-05 03:00:00');
-    $this->admin = PlatformAdmin::factory()->create(['name' => 'Dimas KostPilot']);
+    $this->admin = PlatformAdmin::factory()->create(['name' => 'Dimas Agentic Kost']);
     $this->owner = staff(Role::Owner);
     $this->tenant = $this->owner->tenant()->firstOrFail();
     $this->tenant->update(['trial_ends_at' => now()->addDays(10)]);

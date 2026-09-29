@@ -1,4 +1,4 @@
-# PRD — KostPilot: SaaS ERP Kost dengan Lapisan Agentic
+# PRD — Agentic Kost: SaaS ERP Kost dengan Lapisan Agentic
 
 | Atribut | Nilai |
 |---|---|
@@ -6,7 +6,7 @@
 | Tanggal | 25 September 2026 |
 | Pemilik produk | Yahya — Redscale |
 | Status | Draft untuk review |
-| Nama produk | KostPilot (nama kerja) |
+| Nama produk | Agentic Kost |
 | Model bisnis | SaaS multi-tenant, dijual berlangganan ke banyak pemilik kost |
 
 ---
@@ -37,7 +37,7 @@ note : project ini pakai tailwindcss yah
 
 ## 1. Ringkasan
 
-KostPilot adalah aplikasi SaaS untuk mengelola usaha kost, dijual berlangganan kepada banyak pemilik kost. Setiap pemilik (tenant) mendapatkan ruang kerja terisolasi untuk mengelola properti, kamar, penghuni, kontrak, tagihan, pembayaran, deposit, keuangan, dan maintenance.
+Agentic Kost adalah aplikasi SaaS untuk mengelola usaha kost, dijual berlangganan kepada banyak pemilik kost. Setiap pemilik (tenant) mendapatkan ruang kerja terisolasi untuk mengelola properti, kamar, penghuni, kontrak, tagihan, pembayaran, deposit, keuangan, dan maintenance.
 
 Produk inti adalah **ERP kost** yang benar secara operasional dan akuntansi. Di atasnya dibangun **lapisan agentic**: AI agent yang menjalankan pekerjaan rutin atas nama pemilik (menagih, memverifikasi bukti bayar, melayani calon penghuni, menangani komplain, menyusun laporan) dengan persetujuan manusia untuk aksi berisiko.
 
@@ -134,7 +134,7 @@ Mayoritas pemilik kost skala kecil–menengah mengelola usahanya secara manual:
 | **Penghuni** | Penyewa kamar | Lihat dan bayar tagihan, lapor kerusakan, lihat kontrak |
 | **Pembayar** | Pihak yang membayar tagihan penghuni (misal orang tua) | Menerima tagihan dan pengingat, melihat riwayat bayar |
 | **Calon Penghuni** | Orang yang mencari kamar | Info kamar dan harga, jadwal survey, booking |
-| **Super Admin Platform** | Tim KostPilot | Kelola tenant, paket, dukungan pelanggan |
+| **Super Admin Platform** | Tim Agentic Kost | Kelola tenant, paket, dukungan pelanggan |
 
 ---
 
@@ -929,7 +929,7 @@ Target angka ditetapkan setelah fase pilot.
 5. Teknologi portal penghuni: Livewire PWA, panel Filament, atau Flutter di masa depan.
 6. Apakah kost harian/mingguan (transit) didukung penuh sejak MVP atau cukup bulanan ke atas.
 7. Nilai default aturan bisnis (denda, masa tenggang, urutan alokasi) berdasarkan hasil wawancara owner.
-8. Nama produk final.
+8. Nama produk final. Diputuskan 29 September 2026: **Agentic Kost**.
 9. Durasi trial dan masa retensi data setelah tenant berhenti.
 
 ---
@@ -938,7 +938,7 @@ Target angka ditetapkan setelah fase pilot.
 
 | Istilah | Arti |
 |---|---|
-| Tenant | Satu akun pelanggan KostPilot (pemilik kost beserta seluruh propertinya) |
+| Tenant | Satu akun pelanggan Agentic Kost (pemilik kost beserta seluruh propertinya) |
 | Properti | Satu lokasi kost |
 | Penghuni | Penyewa kamar |
 | Pembayar | Pihak yang ditagih untuk sebuah kontrak, bisa berbeda dari penghuni |

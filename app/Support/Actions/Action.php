@@ -3,6 +3,8 @@
 namespace App\Support\Actions;
 
 use App\Support\Actors\ActorContext;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
+use App\Support\Subscriptions\SubscriptionGate;
 use BackedEnum;
 use Closure;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -57,6 +59,10 @@ abstract class Action
     }
 
     /**
+     * Runs the writes in one transaction. A tenant in read-only mode
+     * (FR-SUB-04) may not write, except through Actions marked
+     * AllowedWhenReadOnly, such as paying the subscription.
+     *
      * @template TReturn
      *
      * @param  Closure(): TReturn  $callback
@@ -64,6 +70,10 @@ abstract class Action
      */
     protected function transaction(Closure $callback): mixed
     {
+        if (! $this instanceof AllowedWhenReadOnly && app()->bound(SubscriptionGate::class)) {
+            app(SubscriptionGate::class)->ensureWritable();
+        }
+
         return DB::transaction($callback);
     }
 }

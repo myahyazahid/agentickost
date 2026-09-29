@@ -21,7 +21,7 @@ final class BackupStore
 
     public function disk(): Filesystem
     {
-        return Storage::disk((string) config('kostpilot.backup.disk'));
+        return Storage::disk((string) config('agentickost.backup.disk'));
     }
 
     /**

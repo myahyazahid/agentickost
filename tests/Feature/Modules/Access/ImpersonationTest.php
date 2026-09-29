@@ -17,7 +17,7 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->travelTo('2026-10-05 03:00:00');
-    $this->admin = PlatformAdmin::factory()->create(['name' => 'Dimas KostPilot']);
+    $this->admin = PlatformAdmin::factory()->create(['name' => 'Dimas Agentic Kost']);
     $this->owner = staff(Role::Owner);
     $this->tenant = $this->owner->tenant()->firstOrFail();
     $this->actingAs($this->admin, 'platform');
@@ -53,7 +53,7 @@ it('enters a tenant from the admin panel with a written reason', function () {
 it('shows the banner in the tenant panel and records work under the super admin', function () {
     $log = startSession();
 
-    $this->get('/app')->assertOk()->assertSee(['sebagai super admin Dimas KostPilot', 'Keluar ke panel admin']);
+    $this->get('/app')->assertOk()->assertSee(['sebagai super admin Dimas Agentic Kost', 'Keluar ke panel admin']);
 
     $this->post(route('access.impersonation.end'))
         ->assertRedirect(TenantResource::getUrl('view', ['record' => $this->tenant], panel: 'admin'));
@@ -86,7 +86,7 @@ it('lists every session for the owner', function () {
     loginAs($this->owner);
 
     Livewire::test(SupportSessions::class)
-        ->assertSee(['Dimas KostPilot', 'Membantu impor data kamar', 'Masih berjalan']);
+        ->assertSee(['Dimas Agentic Kost', 'Membantu impor data kamar', 'Masih berjalan']);
 });
 
 it('refuses a session without a real reason or into a frozen tenant', function () {

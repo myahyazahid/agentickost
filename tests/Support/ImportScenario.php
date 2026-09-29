@@ -59,6 +59,6 @@ final class ImportScenario
 
     private static function tempPath(string $extension): string
     {
-        return sys_get_temp_dir().DIRECTORY_SEPARATOR.'kostpilot-import-'.bin2hex(random_bytes(6)).'.'.$extension;
+        return sys_get_temp_dir().DIRECTORY_SEPARATOR.'agentickost-import-'.bin2hex(random_bytes(6)).'.'.$extension;
     }
 }

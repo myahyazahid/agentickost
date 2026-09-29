@@ -141,7 +141,7 @@ it('refuses lines that do not add up to a clean opening', function (Closure $lin
         ['kind' => 'receivable', 'contract_id' => test()->first->id, 'amount' => 1],
         ['kind' => 'credit', 'contract_id' => test()->first->id, 'amount' => 2],
     ], 'tunggakan dan saldo kredit sekaligus'],
-    'a deposit on a contract made in KostPilot' => [fn () => [
+    'a deposit on a contract made in Agentic Kost' => [fn () => [
         ['kind' => 'deposit', 'contract_id' => LeaseScenario::active()->id, 'amount' => 1],
     ], 'Deposit awal hanya untuk kontrak yang diimpor'],
     'cash on an account that is not cash or bank' => [fn () => [

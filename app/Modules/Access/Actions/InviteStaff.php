@@ -10,6 +10,7 @@ use App\Modules\Tenancy\TenantContext;
 use App\Support\Actions\Action;
 use App\Support\Actors\ActorContext;
 use App\Support\Actors\ActorType;
+use App\Support\Subscriptions\SubscriptionGate;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -23,6 +24,7 @@ final class InviteStaff extends Action
         private readonly InvitationMailer $mailer,
         private readonly TenantContext $tenants,
         private readonly ActorContext $actors,
+        private readonly SubscriptionGate $subscription,
     ) {}
 
     /**
@@ -49,6 +51,8 @@ final class InviteStaff extends Action
                 'email' => "{$data['email']} sudah diundang. Kirim ulang undangannya dari daftar undangan.",
             ]);
         }
+
+        $this->subscription->ensureCanAdd(SubscriptionGate::STAFF, errorKey: 'email');
 
         $actor = $this->actors->current();
 

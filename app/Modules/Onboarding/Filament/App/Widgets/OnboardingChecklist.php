@@ -40,7 +40,7 @@ class OnboardingChecklist extends TableWidget
         $done = count(array_filter($steps));
 
         return $table
-            ->heading('Persiapan KostPilot')
+            ->heading('Persiapan Agentic Kost')
             ->description(sprintf('%d dari %d langkah selesai. Setelah semuanya selesai, tagihan dan laporan berjalan dari data Anda sendiri.', $done, count($steps)))
             ->records(fn (): array => self::rows($steps))
             ->columns([
@@ -94,7 +94,7 @@ class OnboardingChecklist extends TableWidget
             ],
             OnboardingProgress::OPENING_BALANCE => [
                 'Posting saldo awal',
-                'Tunggakan, deposit yang dipegang, dan saldo kas per tanggal mulai memakai KostPilot.',
+                'Tunggakan, deposit yang dipegang, dan saldo kas per tanggal mulai memakai Agentic Kost.',
                 OpeningBalanceResource::getUrl('index'),
             ],
         ];

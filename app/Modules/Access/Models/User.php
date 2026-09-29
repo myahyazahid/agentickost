@@ -7,6 +7,9 @@ use App\Modules\Access\Database\Factories\UserFactory;
 use App\Modules\Access\Enums\Role;
 use App\Modules\Tenancy\Concerns\BelongsToTenant;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Support\Auth\UsesAuthenticatorApp;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Filament\Auth\Notifications\VerifyEmail;
 use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
@@ -39,12 +42,12 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $last_login_at
  */
 #[Fillable(['name', 'email', 'phone', 'password', 'is_active'])]
-#[Hidden(['password', 'remember_token', 'two_factor_secret'])]
+#[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 #[UseFactory(UserFactory::class)]
-class User extends Authenticatable implements FilamentUser, MustVerifyEmailContract
+class User extends Authenticatable implements FilamentUser, HasAppAuthentication, HasAppAuthenticationRecovery, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use Auditable, BelongsToTenant, HasFactory, HasRoles, HasUlids, MustVerifyEmail, Notifiable, SoftDeletes;
+    use Auditable, BelongsToTenant, HasFactory, HasRoles, HasUlids, MustVerifyEmail, Notifiable, SoftDeletes, UsesAuthenticatorApp;
 
     /**
      * @var array<string, mixed>
@@ -109,6 +112,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmailContr
             'is_active' => 'boolean',
             'email_verified_at' => 'datetime',
             'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
         ];

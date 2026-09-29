@@ -49,7 +49,7 @@ final class OpeningBalanceForm
                 ->schema([
                     DatePicker::make('cutoff_date')
                         ->label('Tanggal cut-off')
-                        ->helperText('Saldo per akhir hari ini, biasanya hari terakhir sebelum mulai memakai KostPilot. Tagihan sesudah tanggal ini dibuat KostPilot.')
+                        ->helperText('Saldo per akhir hari ini, biasanya hari terakhir sebelum mulai memakai Agentic Kost. Tagihan sesudah tanggal ini dibuat Agentic Kost.')
                         ->maxDate(now())
                         ->required(),
                 ]),

@@ -32,14 +32,14 @@ final class MysqlClient
             [
                 'host' => (string) config("database.connections.{$default}.host"),
                 'port' => (string) config("database.connections.{$default}.port"),
-                'username' => (string) config('kostpilot.backup.username'),
-                'password' => (string) config('kostpilot.backup.password'),
+                'username' => (string) config('agentickost.backup.username'),
+                'password' => (string) config('agentickost.backup.password'),
                 'database' => (string) config("database.connections.{$default}.database"),
             ],
             [
-                'mysqldump' => (string) config('kostpilot.backup.mysqldump'),
-                'mysql' => (string) config('kostpilot.backup.mysql'),
-                'mysqlbinlog' => (string) config('kostpilot.backup.mysqlbinlog'),
+                'mysqldump' => (string) config('agentickost.backup.mysqldump'),
+                'mysql' => (string) config('agentickost.backup.mysql'),
+                'mysqlbinlog' => (string) config('agentickost.backup.mysqlbinlog'),
             ],
         );
     }

@@ -1,4 +1,4 @@
-# Roadmap — KostPilot
+# Roadmap — Agentic Kost
 
 | Atribut | Nilai |
 |---|---|
@@ -121,7 +121,7 @@ flowchart TD
 
 ### M1.1 Properti & Kamar — `PRP`, `KMR`
 
-- [x] CRUD properti dengan zona waktu dan jenis kost (FR-PRP-01, FR-PRP-02): batas jumlah properti per paket menunggu modul langganan (M1.5.1)
+- [x] CRUD properti dengan zona waktu dan jenis kost (FR-PRP-01, FR-PRP-02): batas jumlah properti per paket berlaku sejak M1.5.1
 - [x] Rekening tujuan per properti (FR-PRP-03)
 - [x] Pengaturan properti: siklus tagihan, prorata, denda, alokasi, notice period, pembulatan (FR-PRP-04)
 - [x] Tipe kamar dengan harga per periode sewa (FR-KMR-01)
@@ -235,9 +235,9 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 - [x] Dashboard: okupansi, pendapatan bulan berjalan, tunggakan, tiket terbuka, pembayaran menunggu (FR-RPT-01): pendapatan dari buku besar, uang yang diterima ditampilkan di bawahnya; setiap angka hanya tampil untuk peran yang berhak
 - [x] Daftar tunggakan per penghuni (FR-RPT-02): satu baris per kontrak, lengkap dengan pembayar yang ditagih
 - [x] Registrasi mandiri dan verifikasi akun (FR-TNT-01, FR-TNT-02): verifikasi lewat email; nomor WhatsApp disimpan, verifikasinya menunggu integrasi WhatsApp (M1.5.4)
-- [x] Masa trial (FR-TNT-03): lama trial diatur super admin, akhir trial per tenant bisa diubah; yang terjadi setelah trial berakhir menunggu langganan (M1.5.1)
+- [x] Masa trial (FR-TNT-03): lama trial diatur super admin, akhir trial per tenant bisa diubah; setelah trial berakhir tanpa bayar, tenant masuk masa tenggang (M1.5.1)
 - [x] Panel super admin: daftar tenant dan status (FR-TNT-04), dengan penggunaan: properti, kamar, kontrak berjalan, pengguna aktif
-- [x] Impersonasi dengan alasan dan audit (FR-TNT-05): owner melihat daftar sesi di menu Akses tim KostPilot
+- [x] Impersonasi dengan alasan dan audit (FR-TNT-05): owner melihat daftar sesi di menu Akses tim Agentic Kost
 - [x] Bekukan dan aktifkan tenant (FR-TNT-06)
 - [x] Undang staf lewat email (FR-USR-03): undangan lewat WhatsApp menunggu M1.5.4
 
@@ -267,17 +267,17 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 - [ ] Penyedia payment gateway dan model akun tenant, dikonfirmasi ke penyedia soal aspek regulasi (PRD §18 no. 4, §14.2)
 - [ ] Teknologi portal penghuni (PRD §18 no. 5)
 - [ ] Durasi trial dan masa retensi data (PRD §18 no. 9)
-- [ ] Nama produk final (PRD §18 no. 8)
+- [x] Nama produk final (PRD §18 no. 8): Agentic Kost
 
 ### M1.5.1 Langganan & Paket — `SUB`
 
-- [ ] Model paket dengan batas penggunaan (FR-SUB-01)
-- [ ] Feature flag per paket (FR-SUB-02)
-- [ ] Tagihan langganan dan pembayaran lewat payment gateway platform (FR-SUB-03)
-- [ ] State machine langganan: trial, aktif, masa tenggang, read-only, dibekukan (FR-SUB-04, PRD §9.6)
-- [ ] Upgrade dan downgrade dengan validasi batas (FR-SUB-05)
-- [ ] Ekspor seluruh data tenant (FR-SUB-06)
-- [ ] Branding per tenant: logo, nama, warna aksen (FR-SUB-07)
+- [x] Model paket dengan batas penggunaan (FR-SUB-01): batas kamar, properti, dan pengguna berlaku; kuota pesan dan kredit AI tersimpan di paket dan dihitung saat WhatsApp dan agent tersedia
+- [x] Feature flag per paket (FR-SUB-02): `SubscriptionGate::allows()`; dipakai fitur berbayar saat dibangun
+- [ ] Tagihan langganan dan pembayaran lewat payment gateway platform (FR-SUB-03): tagihan otomatis selesai; pembayaran dikonfirmasi manual oleh super admin sampai penyedia gateway diputuskan
+- [x] State machine langganan: trial, aktif, masa tenggang, read-only, dibekukan (FR-SUB-04, PRD §9.6): lihat `docs/adr/0009-langganan-dan-mode-baca-saja.md`
+- [x] Upgrade dan downgrade dengan validasi batas (FR-SUB-05)
+- [x] Ekspor seluruh data tenant (FR-SUB-06)
+- [x] Branding per tenant: logo, nama, warna aksen (FR-SUB-07): di tagihan, kuitansi, dan kontrak; portal penghuni menyusul di M1.5.3
 
 ### M1.5.2 Payment Gateway Tenant — `PAY` (P1)
 
@@ -308,18 +308,18 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 ### M1.5.5 Akuntansi & Laporan Lanjutan — `ACC` (P1), `RPT` (P1)
 
-- [ ] Jurnal manual (FR-ACC-05)
-- [ ] Laba rugi, neraca, arus kas per properti dan konsolidasi (FR-ACC-06)
-- [ ] Laporan versi kas (FR-ACC-07)
-- [ ] Tutup buku per periode (FR-ACC-08, PRD §8.11)
-- [ ] Aging piutang (FR-RPT-03)
-- [ ] Ekspor Excel dan PDF (FR-RPT-05)
-- [ ] Ekspor data penghuni untuk RT/RW (FR-PNH-07)
+- [x] Jurnal manual (FR-ACC-05): dibatalkan dengan jurnal pembalik; akun piutang, deposit, saldo kredit, uang muka, dan kas staf tidak bisa dipakai
+- [x] Laba rugi, neraca, arus kas per properti dan konsolidasi (FR-ACC-06)
+- [x] Laporan versi kas (FR-ACC-07): menu Uang masuk dan keluar
+- [x] Tutup buku per periode (FR-ACC-08, PRD §8.11)
+- [x] Aging piutang (FR-RPT-03)
+- [x] Ekspor Excel dan PDF (FR-RPT-05): laporan keuangan, umur piutang, tunggakan, deposit, dan data RT/RW
+- [x] Ekspor data penghuni untuk RT/RW (FR-PNH-07): nomor identitas hanya untuk peran yang boleh melihatnya, tercatat di log audit
 
 ### M1.5.6 Keamanan & Legal
 
-- [ ] Autentikasi dua faktor untuk Owner, Akuntan, dan super admin (FR-USR-05, NFR-SEC-05)
-- [ ] Rate limiting login, OTP, dan endpoint publik (NFR-SEC-03)
+- [x] Autentikasi dua faktor untuk Owner, Akuntan, dan super admin (FR-USR-05, NFR-SEC-05): aplikasi autentikator dengan kode pemulihan; staf lain boleh memasang dari profil
+- [ ] Rate limiting login, OTP, dan endpoint publik (NFR-SEC-03): login (per alamat IP dan per akun) dan endpoint publik selesai; OTP menyusul bersama portal penghuni (M1.5.3)
 - [ ] Syarat layanan, kebijakan privasi, dan perjanjian pemrosesan data, ditinjau pihak yang memahami hukum (NFR-PDP-01)
 - [ ] Mekanisme permintaan hapus dan ekspor data pribadi penghuni (NFR-PDP-03)
 - [ ] Job anonimisasi sesuai retensi (NFR-PDP-02)

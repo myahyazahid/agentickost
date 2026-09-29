@@ -63,7 +63,7 @@ enum ImportSheet: string implements HasLabel
                 new ImportColumn('deposit', 'Deposit', false, 'Nilai deposit di kontrak. Deposit yang sedang dipegang dicatat di saldo awal.', '1200000'),
                 new ImportColumn('tanggal_mulai', 'Tanggal mulai', true, 'Tanggal penghuni mulai menyewa.', '01/03/2026'),
                 new ImportColumn('tanggal_selesai', 'Tanggal selesai', false, 'Kosongkan bila kontrak berjalan terus.', ''),
-                new ImportColumn('tagihan_berikutnya', 'Tagihan berikutnya mulai', true, 'Awal periode pertama yang belum ditagih. KostPilot menagih mulai tanggal ini.', '01/10/2026'),
+                new ImportColumn('tagihan_berikutnya', 'Tagihan berikutnya mulai', true, 'Awal periode pertama yang belum ditagih. Agentic Kost menagih mulai tanggal ini.', '01/10/2026'),
                 new ImportColumn('nama_pembayar', 'Nama pembayar', false, 'Kosongkan bila penghuni membayar sendiri.', ''),
                 new ImportColumn('hp_pembayar', 'HP pembayar', false, 'Wajib bila nama pembayar diisi.', ''),
                 new ImportColumn('hubungan_pembayar', 'Hubungan pembayar', false, 'Orang tua, Wali, Perusahaan, atau Lainnya.', ''),

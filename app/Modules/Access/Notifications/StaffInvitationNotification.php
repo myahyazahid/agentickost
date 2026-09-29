@@ -30,7 +30,7 @@ final class StaffInvitationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Undangan bergabung dengan {$this->businessName} di KostPilot")
+            ->subject("Undangan bergabung dengan {$this->businessName} di Agentic Kost")
             ->greeting("Halo {$this->invitation->name},")
             ->line("Anda diundang sebagai {$this->invitation->role->getLabel()} di {$this->businessName}.")
             ->line('Buka tautan di bawah, lalu buat password untuk masuk.')

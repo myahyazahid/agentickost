@@ -31,3 +31,8 @@ Schedule::command('billing:accrue-penalties')->hourly()->withoutOverlapping()->s
 Schedule::command('backup:database')->dailyAt('19:00')->withoutOverlapping()->sentryMonitor();
 Schedule::command('backup:binlogs')->hourlyAt(30)->withoutOverlapping()->sentryMonitor();
 Schedule::command('backup:restore-test')->monthlyOn(1, '21:00')->withoutOverlapping()->sentryMonitor(maxRuntime: 240);
+
+// Subscriptions (PRD §9.6). Hourly, so each tenant's own midnight is picked
+// up. Expired data exports are removed at 20:00 UTC (03:00 WIB).
+Schedule::command('subscriptions:advance')->hourlyAt(10)->withoutOverlapping()->sentryMonitor();
+Schedule::command('subscriptions:prune-exports')->dailyAt('20:00')->withoutOverlapping()->sentryMonitor();

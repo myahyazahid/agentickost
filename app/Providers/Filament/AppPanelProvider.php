@@ -3,9 +3,13 @@
 namespace App\Providers\Filament;
 
 use App\Modules\Access\Filament\App\Auth\Register;
+use App\Modules\Access\Http\Middleware\RequireTwoFactor;
 use App\Modules\Access\Http\Middleware\SetTenantContext;
+use App\Support\Filament\Auth\EditProfile;
+use App\Support\Filament\Auth\Login;
 use App\Support\Filament\PanelTheme;
 use App\Support\Modules\DiscoversModuleComponents;
+use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -34,8 +38,11 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
-            ->login()
+            ->login(Login::class)
             ->registration(Register::class)
+            ->profile(EditProfile::class, isSimple: false)
+            ->multiFactorAuthentication([AppAuthentication::make()->recoverable()], isRequired: true)
+            ->multiFactorAuthenticationRequiredMiddlewareName(RequireTwoFactor::class)
             ->emailVerification()
             ->passwordReset()
             ->databaseNotifications()

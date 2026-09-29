@@ -45,7 +45,7 @@ final class AcceptStaffInvitation extends Action
 
             if (DB::table('users')->where('email', $invitation->email)->exists()) {
                 throw ValidationException::withMessages([
-                    'password' => "{$invitation->email} sudah punya akun KostPilot. Masuk dengan akun itu, atau minta undangan ke email lain.",
+                    'password' => "{$invitation->email} sudah punya akun Agentic Kost. Masuk dengan akun itu, atau minta undangan ke email lain.",
                 ]);
             }
 

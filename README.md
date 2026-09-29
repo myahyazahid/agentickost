@@ -1,4 +1,4 @@
-# KostPilot
+# Agentic Kost
 
 SaaS ERP untuk usaha kost, multi-tenant, dengan lapisan AI agent di atasnya.
 
@@ -49,11 +49,11 @@ Tenant baru beserta owner-nya dibuat dengan `php artisan tenant:create`.
 
 ```sh
 # macOS / Linux
-AWS_ACCESS_KEY_ID=kostpilot AWS_SECRET_ACCESS_KEY=kostpilot-secret \
+AWS_ACCESS_KEY_ID=agentickost AWS_SECRET_ACCESS_KEY=agentickost-secret \
   weed mini -dir=$HOME/seaweed-data -bucket=agentickost
 
 # Windows PowerShell
-$env:AWS_ACCESS_KEY_ID="kostpilot"; $env:AWS_SECRET_ACCESS_KEY="kostpilot-secret"
+$env:AWS_ACCESS_KEY_ID="agentickost"; $env:AWS_SECRET_ACCESS_KEY="agentickost-secret"
 weed.exe mini -dir="$HOME\seaweed-data" -bucket=agentickost
 ```
 

@@ -13,7 +13,7 @@ use OpenSpout\Writer\XLSX\Writer;
  */
 final class ImportTemplate
 {
-    public const FILENAME = 'template-impor-kostpilot.xlsx';
+    public const FILENAME = 'template-impor-agentic-kost.xlsx';
 
     public static function write(string $path): void
     {

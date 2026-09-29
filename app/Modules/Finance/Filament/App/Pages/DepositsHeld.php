@@ -6,8 +6,14 @@ use App\Modules\Access\Models\User;
 use App\Modules\Finance\Models\DepositTransaction;
 use App\Modules\Finance\Support\DepositsHeld as DepositsHeldQuery;
 use App\Modules\Property\Models\Property;
+use App\Modules\Tenancy\TenantContext;
 use App\Support\Filament\MoneyColumn;
+use App\Support\Filament\ReportDownloads;
+use App\Support\Reports\ReportColumn;
+use App\Support\Reports\ReportRow;
+use App\Support\Reports\ReportSheet;
 use BackedEnum;
+use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\EmbeddedTable;
 use Filament\Schemas\Schema;
@@ -45,6 +51,29 @@ class DepositsHeld extends Page implements HasTable
     public function getSubheading(): string
     {
         return 'Deposit adalah uang penghuni yang harus dikembalikan saat keluar, kecuali dipotong dengan alasan.';
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [ReportDownloads::make(fn (): ReportSheet => $this->sheet())];
+    }
+
+    public function sheet(): ReportSheet
+    {
+        $properties = DepositsHeldQuery::perProperty(User::current())->orderBy('name')->get();
+        $rows = $properties->map(fn (Property $property): ReportRow => ReportRow::line([
+            'name' => $property->name,
+            'contracts' => (string) $property->getAttribute('contracts_holding_count'),
+            'amount' => (int) $property->getAttribute('deposit_held_amount'),
+        ]))->values()->all();
+
+        return new ReportSheet(
+            'Deposit dipegang',
+            'Per '.CarbonImmutable::now(app(TenantContext::class)->tenant()->default_timezone)->translatedFormat('j F Y'),
+            ['name' => ReportColumn::text('Properti'), 'contracts' => ReportColumn::text('Kontrak dengan deposit'), 'amount' => ReportColumn::money('Deposit dipegang')],
+            [...$rows, ReportRow::total(['name' => 'Total', 'amount' => array_sum(array_map(fn (ReportRow $row): int => (int) ($row->cells['amount'] ?? 0), $rows))])],
+            'deposit-dipegang-'.CarbonImmutable::now(app(TenantContext::class)->tenant()->default_timezone)->format('Ymd'),
+        );
     }
 
     public function content(Schema $schema): Schema

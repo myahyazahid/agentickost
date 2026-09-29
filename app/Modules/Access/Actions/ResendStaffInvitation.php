@@ -6,6 +6,7 @@ use App\Modules\Access\Models\StaffInvitation;
 use App\Modules\Access\Models\User;
 use App\Modules\Access\Support\InvitationMailer;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\SubscriptionGate;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -14,7 +15,10 @@ use Illuminate\Validation\ValidationException;
  */
 final class ResendStaffInvitation extends Action
 {
-    public function __construct(private readonly InvitationMailer $mailer) {}
+    public function __construct(
+        private readonly InvitationMailer $mailer,
+        private readonly SubscriptionGate $subscription,
+    ) {}
 
     public function handle(StaffInvitation $invitation): StaffInvitation
     {
@@ -22,6 +26,11 @@ final class ResendStaffInvitation extends Action
 
         if (! $invitation->isPending() && ! $invitation->isExpired()) {
             throw ValidationException::withMessages(['email' => 'Undangan ini sudah diterima atau dibatalkan.']);
+        }
+
+        // An expired invitation no longer holds a seat under the plan limit.
+        if ($invitation->isExpired()) {
+            $this->subscription->ensureCanAdd(SubscriptionGate::STAFF, errorKey: 'email');
         }
 
         return $this->transaction(function () use ($invitation): StaffInvitation {

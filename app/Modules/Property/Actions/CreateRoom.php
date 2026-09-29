@@ -8,12 +8,16 @@ use App\Modules\Property\Models\Property;
 use App\Modules\Property\Models\Room;
 use App\Modules\Property\Models\RoomType;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\SubscriptionGate;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 final class CreateRoom extends Action
 {
-    public function __construct(private readonly AttachmentSync $attachments) {}
+    public function __construct(
+        private readonly AttachmentSync $attachments,
+        private readonly SubscriptionGate $subscription,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $input
@@ -23,6 +27,7 @@ final class CreateRoom extends Action
         $this->authorize('manageRooms', $property);
 
         $data = $this->validate($input, self::rules($property));
+        $this->subscription->ensureCanAdd(SubscriptionGate::ROOMS, errorKey: 'number');
 
         return $this->transaction(function () use ($property, $data): Room {
             $roomType = RoomType::query()->whereKey($data['room_type_id'])->firstOrFail();

@@ -27,7 +27,7 @@ final class TestRestore extends Command
 
     public function handle(MysqlClient $mysql, BackupStore $store): int
     {
-        $scratch = (string) config('kostpilot.backup.restore_database');
+        $scratch = (string) config('agentickost.backup.restore_database');
 
         if (preg_match('/^\w+$/', $scratch) !== 1 || $scratch === $mysql->database()) {
             throw new RuntimeException('BACKUP_RESTORE_DATABASE harus nama database lain (huruf, angka, garis bawah), bukan database aplikasi.');

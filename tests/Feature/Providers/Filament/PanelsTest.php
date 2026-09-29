@@ -63,7 +63,7 @@ it('keeps super admins out of the app panel', function () {
     $this->actingAs(PlatformAdmin::factory()->create(), 'platform')->get('/app')->assertRedirect('/app/login');
 });
 
-it('gives both panels the KostPilot theme', function (string $panel) {
+it('gives both panels the Agentic Kost theme', function (string $panel) {
     $panel = Filament::getPanel($panel);
 
     expect($panel->getViteTheme())->toBe(PanelTheme::STYLESHEET)

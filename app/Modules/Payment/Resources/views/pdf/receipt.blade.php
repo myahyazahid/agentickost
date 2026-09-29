@@ -1,9 +1,11 @@
 @php
     use App\Modules\Payment\Enums\PaymentMethod;
     use App\Modules\Payment\States\Payment\Reversed;
+    use App\Modules\Tenancy\Support\TenantBranding;
     use App\Support\Money\Rupiah;
 
     $accent = $tenant->brand_color ?: '#0f766e';
+    $logo = TenantBranding::logoDataUri($tenant);
     $timezone = $payment->property->timezone->value;
     $isReversed = $payment->status->equals(Reversed::class);
 @endphp
@@ -32,6 +34,9 @@
 </head>
 <body>
     <div class="header">
+        @if ($logo)
+            <img src="{{ $logo }}" alt="" style="max-height: 48px; max-width: 180px; margin-bottom: 6px">
+        @endif
         <div class="tenant">{{ $tenant->name }}</div>
         <div class="muted">{{ $payment->property->name }}, {{ $payment->property->address }}, {{ $payment->property->city }}</div>
     </div>

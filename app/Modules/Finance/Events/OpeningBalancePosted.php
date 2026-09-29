@@ -6,7 +6,7 @@ use App\Modules\Finance\Models\OpeningBalance;
 use Illuminate\Foundation\Events\Dispatchable;
 
 /**
- * Balances from before KostPilot were carried into the ledgers.
+ * Balances from before Agentic Kost were carried into the ledgers.
  */
 final class OpeningBalancePosted
 {

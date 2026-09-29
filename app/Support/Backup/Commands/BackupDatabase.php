@@ -34,7 +34,7 @@ final class BackupDatabase extends Command
                 '--triggers',
                 '--no-tablespaces',
                 '--set-gtid-purged=OFF',
-                ...(config('kostpilot.backup.binary_logs') ? ['--source-data=2'] : []),
+                ...(config('agentickost.backup.binary_logs') ? ['--source-data=2'] : []),
                 "--result-file={$local}",
                 $mysql->database(),
             ]);
@@ -51,7 +51,7 @@ final class BackupDatabase extends Command
             File::delete($local);
         }
 
-        $pruned = $store->prune((int) config('kostpilot.backup.keep_days'), $takenAt);
+        $pruned = $store->prune((int) config('agentickost.backup.keep_days'), $takenAt);
 
         $this->components->info('Backup '.BackupStore::dumpPath($takenAt).' tersimpan ('.Number::fileSize($size).' sebelum dikompres). '.$pruned.' backup lama dihapus.');
 

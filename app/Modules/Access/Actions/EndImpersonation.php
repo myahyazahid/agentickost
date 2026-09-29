@@ -8,6 +8,7 @@ use App\Modules\Tenancy\TenantContext;
 use App\Support\Actions\Action;
 use App\Support\Actors\ActorContext;
 use App\Support\Actors\ActorType;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 use Illuminate\Auth\Access\AuthorizationException;
 
 /**
@@ -15,7 +16,7 @@ use Illuminate\Auth\Access\AuthorizationException;
  * can close it. Gate policies cannot check this: during the session they
  * see the owner account, so the actor is compared directly.
  */
-final class EndImpersonation extends Action
+final class EndImpersonation extends Action implements AllowedWhenReadOnly
 {
     public function __construct(
         private readonly ActorContext $actors,

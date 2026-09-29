@@ -2,6 +2,8 @@
 
 namespace App\Modules\Tenancy;
 
+use App\Modules\Access\Permissions\PermissionRegistry;
+use App\Modules\Tenancy\Enums\TenancyPermission;
 use App\Modules\Tenancy\Models\ImpersonationLog;
 use App\Modules\Tenancy\Models\PlatformAdmin;
 use App\Modules\Tenancy\Models\Tenant;
@@ -12,6 +14,14 @@ use Illuminate\Support\Facades\Context;
 
 class TenancyServiceProvider extends ModuleServiceProvider
 {
+    public function register(): void
+    {
+        $this->callAfterResolving(
+            PermissionRegistry::class,
+            fn (PermissionRegistry $registry) => $registry->register(TenancyPermission::class),
+        );
+    }
+
     public function boot(): void
     {
         parent::boot();

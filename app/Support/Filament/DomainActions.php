@@ -2,9 +2,11 @@
 
 namespace App\Support\Filament;
 
+use App\Support\Subscriptions\ReadOnlyMode;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 
@@ -27,6 +29,10 @@ final class DomainActions
     {
         try {
             return $callback();
+        } catch (ReadOnlyMode $exception) {
+            self::notifyReadOnly($exception);
+
+            throw new Halt;
         } catch (ValidationException $exception) {
             throw ValidationException::withMessages(
                 collect($exception->errors())
@@ -46,6 +52,10 @@ final class DomainActions
     {
         try {
             $callback();
+        } catch (ReadOnlyMode $exception) {
+            self::notifyReadOnly($exception);
+
+            $action->halt();
         } catch (ValidationException $exception) {
             Notification::make()
                 ->danger()
@@ -55,5 +65,15 @@ final class DomainActions
 
             $action->halt();
         }
+    }
+
+    private static function notifyReadOnly(ReadOnlyMode $exception): void
+    {
+        Notification::make()
+            ->danger()
+            ->title('Mode baca saja')
+            ->body($exception->getMessage())
+            ->persistent()
+            ->send();
     }
 }

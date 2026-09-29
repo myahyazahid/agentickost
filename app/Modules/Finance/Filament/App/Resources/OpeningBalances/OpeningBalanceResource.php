@@ -56,7 +56,7 @@ class OpeningBalanceResource extends Resource
             ->recordUrl(fn (OpeningBalance $record): string => static::getUrl($record->isDraft() ? 'edit' : 'view', ['record' => $record]))
             ->emptyStateIcon(Heroicon::OutlinedScale)
             ->emptyStateHeading('Belum ada saldo awal')
-            ->emptyStateDescription('Catat tunggakan, deposit yang dipegang, dan saldo kas per tanggal mulai memakai KostPilot, supaya laporan cocok dengan catatan lama.');
+            ->emptyStateDescription('Catat tunggakan, deposit yang dipegang, dan saldo kas per tanggal mulai memakai Agentic Kost, supaya laporan cocok dengan catatan lama.');
     }
 
     public static function getPages(): array

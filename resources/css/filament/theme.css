@@ -5,7 +5,7 @@
 @source '../../../resources/views/filament/**/*';
 
 /*
- * KostPilot theme for both panels, light mode only. The palette (warm grays,
+ * Agentic Kost theme for both panels, light mode only. The palette (warm grays,
  * red primary) is registered in App\Support\Filament\PanelTheme; this file
  * restyles Filament's components without moving them. Rules sit in the
  * components layer after Filament's, so a matching selector wins and utility

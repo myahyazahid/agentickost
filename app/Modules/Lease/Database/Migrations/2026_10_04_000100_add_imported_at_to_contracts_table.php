@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Marks contracts that were already running when the tenant moved to
- * KostPilot (FR-ONB-02). Their deposit is carried in through the opening
+ * Agentic Kost (FR-ONB-02). Their deposit is carried in through the opening
  * balance, so billing never charges it again.
  */
 return new class extends Migration

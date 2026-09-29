@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 use UnitEnum;
 
 /**
- * Every time KostPilot staff entered this tenant's panel, and why
+ * Every time Agentic Kost staff entered this tenant's panel, and why
  * (FR-TNT-05). Changes made in a session appear in the audit log under the
  * super admin's name.
  */
@@ -30,13 +30,13 @@ class SupportSessions extends Page implements HasTable
 
     protected static string|UnitEnum|null $navigationGroup = 'Properti';
 
-    protected static ?string $navigationLabel = 'Akses tim KostPilot';
+    protected static ?string $navigationLabel = 'Akses tim Agentic Kost';
 
     protected static ?int $navigationSort = 81;
 
-    protected static ?string $slug = 'akses-kostpilot';
+    protected static ?string $slug = 'akses-agentic-kost';
 
-    protected static ?string $title = 'Akses tim KostPilot';
+    protected static ?string $title = 'Akses tim Agentic Kost';
 
     public static function canAccess(): bool
     {
@@ -50,7 +50,7 @@ class SupportSessions extends Page implements HasTable
 
     public function getSubheading(): string
     {
-        return 'Tim KostPilot hanya masuk ke panel Anda dengan alasan tertulis. Setiap sesi tercatat di sini.';
+        return 'Tim Agentic Kost hanya masuk ke panel Anda dengan alasan tertulis. Setiap sesi tercatat di sini.';
     }
 
     public function content(Schema $schema): Schema
@@ -67,12 +67,12 @@ class SupportSessions extends Page implements HasTable
             ->columns([
                 TextColumn::make('started_at')->label('Mulai')->dateTime('j M Y H:i', self::timezone())->sortable(),
                 TextColumn::make('ended_at')->label('Selesai')->dateTime('j M Y H:i', self::timezone())->placeholder('Masih berjalan'),
-                TextColumn::make('platformAdmin.name')->label('Petugas KostPilot'),
+                TextColumn::make('platformAdmin.name')->label('Petugas Agentic Kost'),
                 TextColumn::make('reason')->label('Alasan')->wrap(),
             ])
             ->defaultSort('started_at', 'desc')
             ->emptyStateIcon(Heroicon::OutlinedShieldCheck)
             ->emptyStateHeading('Belum pernah ada akses')
-            ->emptyStateDescription('Tim KostPilot belum pernah masuk ke panel Anda.');
+            ->emptyStateDescription('Tim Agentic Kost belum pernah masuk ke panel Anda.');
     }
 }

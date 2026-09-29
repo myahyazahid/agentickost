@@ -1,9 +1,11 @@
 @php
     use App\Modules\Billing\States\Invoice\Paid;
     use App\Modules\Billing\States\Invoice\Voided;
+    use App\Modules\Tenancy\Support\TenantBranding;
     use App\Support\Money\Rupiah;
 
     $accent = $tenant->brand_color ?: '#0f766e';
+    $logo = TenantBranding::logoDataUri($tenant);
     $date = fn ($value) => $value?->translatedFormat('j F Y');
     $isVoided = $invoice->status->equals(Voided::class);
     $isPaid = $invoice->status->equals(Paid::class);
@@ -38,6 +40,9 @@
 </head>
 <body>
     <div class="header">
+        @if ($logo)
+            <img src="{{ $logo }}" alt="" style="max-height: 48px; max-width: 180px; margin-bottom: 6px">
+        @endif
         <div class="tenant">{{ $tenant->name }}</div>
         <div class="muted">{{ $invoice->property->name }}, {{ $invoice->property->address }}, {{ $invoice->property->city }}</div>
     </div>

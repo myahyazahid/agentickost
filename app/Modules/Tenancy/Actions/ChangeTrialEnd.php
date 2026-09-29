@@ -5,6 +5,7 @@ namespace App\Modules\Tenancy\Actions;
 use App\Modules\Tenancy\Events\TenantChangedByPlatform;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Support\Actions\Action;
+use App\Support\Subscriptions\AllowedWhenReadOnly;
 use Illuminate\Support\Carbon;
 
 /**
@@ -12,7 +13,7 @@ use Illuminate\Support\Carbon;
  * pilot kost more time. The trial runs to the end of that day in the
  * tenant's time zone.
  */
-final class ChangeTrialEnd extends Action
+final class ChangeTrialEnd extends Action implements AllowedWhenReadOnly
 {
     /**
      * @param  array<string, mixed>  $input

@@ -153,7 +153,7 @@ final class SaveOpeningBalance extends Action
     private static function ensureNotCarriedIn(OpeningBalanceKind $kind, Contract $contract, string $label): void
     {
         if ($kind === OpeningBalanceKind::Deposit && ! $contract->isImported()) {
-            self::fail("{$label} dibuat langsung di KostPilot, jadi deposit-nya ditagih di tagihan pertama. Deposit awal hanya untuk kontrak yang diimpor.");
+            self::fail("{$label} dibuat langsung di Agentic Kost, jadi deposit-nya ditagih di tagihan pertama. Deposit awal hanya untuk kontrak yang diimpor.");
         }
 
         $exists = match ($kind) {

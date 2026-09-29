@@ -18,7 +18,7 @@ final class IdentityHasher
             return null;
         }
 
-        $key = config('kostpilot.identity_hash_key');
+        $key = config('agentickost.identity_hash_key');
 
         if (! is_string($key) || $key === '') {
             throw new RuntimeException('IDENTITY_HASH_KEY belum diisi.');

@@ -2,7 +2,9 @@
 
 namespace App\Modules\Finance\Filament\App\Resources\Journals;
 
+use App\Modules\Access\Models\User;
 use App\Modules\Finance\Enums\JournalEvent;
+use App\Modules\Finance\Filament\App\Resources\Journals\Pages\CreateManualJournal;
 use App\Modules\Finance\Filament\App\Resources\Journals\Pages\ListJournalEntries;
 use App\Modules\Finance\Filament\App\Resources\Journals\Pages\ViewJournalEntry;
 use App\Modules\Finance\Models\JournalEntry;
@@ -28,7 +30,8 @@ use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 /**
- * Automatic journals, read-only (FR-ACC-02).
+ * Automatic journals (FR-ACC-02) and manual ones (FR-ACC-05). A journal is
+ * never edited; a manual one is undone by reversing it.
  */
 class JournalEntryResource extends Resource
 {
@@ -79,6 +82,11 @@ class JournalEntryResource extends Resource
             ->emptyStateDescription('Jurnal dibuat otomatis saat tagihan terbit, pembayaran diverifikasi, deposit berubah, atau pengeluaran dicatat.');
     }
 
+    public static function canCreate(): bool
+    {
+        return User::current()->can('createManual', JournalEntry::class);
+    }
+
     public static function infolist(Schema $schema): Schema
     {
         $money = fn (mixed $state): ?string => is_numeric($state) && (int) $state !== 0 ? Rupiah::format((int) $state) : null;
@@ -121,6 +129,7 @@ class JournalEntryResource extends Resource
     {
         return [
             'index' => ListJournalEntries::route('/'),
+            'create' => CreateManualJournal::route('/manual'),
             'view' => ViewJournalEntry::route('/{record}'),
         ];
     }

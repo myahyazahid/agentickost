@@ -1,4 +1,4 @@
-# KostPilot
+# Agentic Kost
 
 SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca dokumen yang relevan:
 
@@ -20,7 +20,7 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 ## Struktur
 
 - Modul domain di `app/Modules/{Nama}/` dengan `{Nama}ServiceProvider` (terdaftar otomatis). Isi umum: `Actions/`, `Models/`, `Enums/`, `Policies/`, `Database/Migrations/`, `Database/Factories/`, `Filament/App|Admin/`. Kode lintas modul tanpa domain di `app/Support/`.
-- Modul saat ini: `Tenancy` (tenant, konteks tenant, super admin, trial, pembekuan), `Access` (user, peran, audit log, registrasi mandiri, undangan staf, impersonasi), `Documents` (lampiran, penomoran dokumen), `Property` (properti, kamar, harga, pengaturan), `Lease` (penghuni, pembayar, kontrak), `Billing` (tagihan, denda, nota kredit, tarif utilitas, meteran), `Payment` (pembayaran, alokasi, saldo kredit, kas staf, kuitansi), `Maintenance` (tiket perbaikan), `Finance` (akun, rekening tujuan, ledger deposit, jurnal otomatis, pengeluaran, saldo awal), `Onboarding` (wizard setup, impor Excel, checklist; tanpa tabel sendiri, menulis lewat Action modul lain), `Reports` (dashboard dan daftar tunggakan; hanya membaca).
+- Modul saat ini: `Tenancy` (tenant, konteks tenant, super admin, trial, pembekuan, profil usaha), `Access` (user, peran, audit log, registrasi mandiri, undangan staf, impersonasi), `Documents` (lampiran, penomoran dokumen), `Property` (properti, kamar, harga, pengaturan), `Lease` (penghuni, pembayar, kontrak), `Billing` (tagihan, denda, nota kredit, tarif utilitas, meteran), `Payment` (pembayaran, alokasi, saldo kredit, kas staf, kuitansi), `Maintenance` (tiket perbaikan), `Finance` (akun, rekening tujuan, ledger deposit, jurnal otomatis dan manual, pengeluaran, saldo awal, tutup buku, laporan keuangan), `Onboarding` (wizard setup, impor Excel, checklist; tanpa tabel sendiri, menulis lewat Action modul lain), `Reports` (dashboard, tunggakan, laporan keuangan, umur piutang, data RT/RW; hanya membaca), `Subscription` (paket, langganan tenant, tagihan langganan, ekspor data tenant).
 - Modul boleh membaca model modul lain, tetapi menulis lewat Action modul pemiliknya. Contoh: Billing memajukan kursor tagihan kontrak lewat `Lease\Support\BillingCursor`; Payment mengubah `paid_amount` tagihan lewat `Billing\Support\InvoicePayments` dan menulis ledger deposit lewat `Finance\Support\DepositLedger`.
 - Panel Filament `app` di `/app` untuk owner dan staf (guard `web`), panel `admin` di `/admin` untuk super admin (guard `platform`, model `PlatformAdmin`).
 
@@ -34,6 +34,7 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 - Nominal uang memakai cast `RupiahCast` dan ditampilkan dengan `Rupiah::format()`.
 - Status domain memakai `spatie/laravel-model-states` + `EnforcesStateTransitions`.
 - Peristiwa keuangan baru memancarkan event; jurnalnya dibuat subscriber di `Finance/Listeners/*Journals.php` lewat `JournalPoster`, bukan oleh modul asal.
+- Langganan (FR-SUB-01, FR-SUB-04): `Action::transaction()` menolak tulis saat tenant baca saja (`ReadOnlyMode`, lewat `App\Support\Subscriptions\SubscriptionGate`). Action yang harus tetap jalan saat itu (bayar atau pilih paket, ekspor data, operasi super admin) meng-implement `AllowedWhenReadOnly`. Action yang menambah kamar, properti, atau pengguna memanggil `SubscriptionGate::ensureCanAdd()`; fitur per paket dicek dengan `SubscriptionGate::allows()`.
 
 ## Lingkungan lokal
 
@@ -42,6 +43,7 @@ SaaS ERP kost multi-tenant (Laravel 13, Filament 5). Sebelum mengubah kode, baca
 - `composer.json` mendeklarasikan `ext-pcntl` dan `ext-posix` di `config.platform` agar `composer install` berhasil di Windows. Jangan dihapus.
 - Disk `s3` mengarah ke SeaweedFS lokal di `http://127.0.0.1:8333` (lihat README).
 - `php artisan migrate:fresh --seed` membuat super admin `admin@example.com`, tenant "Kost Demo" dengan owner `owner@example.com`, dan satu properti. Password semua akun: `password`.
+- Owner, Akuntan, dan super admin wajib memasang aplikasi autentikator saat pertama masuk. Untuk lokal bisa dimatikan dengan `AGENTICKOST_TWO_FACTOR_REQUIRED=false` di `.env`; test suite mematikannya lewat `phpunit.xml`, dan `TwoFactorTest` menyalakannya lagi.
 - Tenant baru: `php artisan tenant:create`. Jangan pakai `make:filament-user` untuk panel `app` karena user wajib punya tenant.
 
 ## Sebelum menyatakan selesai

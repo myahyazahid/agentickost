@@ -11,8 +11,13 @@ use App\Modules\Payment\Filament\App\Resources\Payments\PaymentResource;
 use App\Modules\Property\Filament\PropertyOptions;
 use App\Modules\Property\Models\Property;
 use App\Modules\Reports\Support\Overdue;
+use App\Modules\Tenancy\TenantContext;
 use App\Support\Filament\MoneyColumn;
+use App\Support\Filament\ReportDownloads;
 use App\Support\Money\Rupiah;
+use App\Support\Reports\ReportColumn;
+use App\Support\Reports\ReportRow;
+use App\Support\Reports\ReportSheet;
 use BackedEnum;
 use Carbon\CarbonImmutable;
 use Filament\Actions\Action;
@@ -65,6 +70,39 @@ class Arrears extends Page implements HasTable
         return $contracts === 0
             ? 'Tidak ada tagihan yang lewat jatuh tempo.'
             : 'Total '.Rupiah::format($amount)." dari {$contracts} kontrak. Denda yang sudah terhitung ikut dijumlahkan.";
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [ReportDownloads::make(fn (): ReportSheet => $this->sheet())];
+    }
+
+    public function sheet(): ReportSheet
+    {
+        $rows = self::query()->orderByDesc('arrears_amount')->get()->map(fn (Contract $contract): ReportRow => ReportRow::line([
+            'room' => trim("Kamar {$contract->room?->number}, {$contract->property?->name}"),
+            'residents' => $contract->residents->pluck('full_name')->implode(', '),
+            'payer' => trim("{$contract->payer?->name} {$contract->payer?->phone}"),
+            'invoices' => (string) $contract->getAttribute('overdue_invoices_count'),
+            'since' => self::daysLate($contract),
+            'amount' => (int) $contract->getAttribute('arrears_amount'),
+        ]))->values()->all();
+
+        return new ReportSheet(
+            'Tunggakan per penghuni',
+            'Per '.CarbonImmutable::now(app(TenantContext::class)->tenant()->default_timezone)->translatedFormat('j F Y'),
+            [
+                'room' => ReportColumn::text('Kamar'),
+                'residents' => ReportColumn::text('Penghuni'),
+                'payer' => ReportColumn::text('Pembayar'),
+                'invoices' => ReportColumn::text('Tagihan telat'),
+                'since' => ReportColumn::text('Telat'),
+                'amount' => ReportColumn::money('Tunggakan'),
+            ],
+            [...$rows, ReportRow::total(['room' => 'Total', 'amount' => array_sum(array_map(fn (ReportRow $row): int => (int) ($row->cells['amount'] ?? 0), $rows))])],
+            'tunggakan-'.CarbonImmutable::now(app(TenantContext::class)->tenant()->default_timezone)->format('Ymd'),
+            'Denda yang sudah terhitung ikut dijumlahkan.',
+        );
     }
 
     public function content(Schema $schema): Schema
