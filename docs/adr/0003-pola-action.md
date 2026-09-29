@@ -24,10 +24,13 @@ Contoh: `CreateProperty`, `AssignStaffToProperty`, `CreateUser`, `CreateTenant`.
 |---|---|
 | `user` | Gate/policy Laravel dengan user tersebut |
 | `system` | Lolos, **hanya bila di-set eksplisit** lewat `actingAs(Actor::system(), ...)`. Request tanpa login tidak pernah jatuh ke hak sistem |
-| `agent`, `resident`, `platform_admin` | Ditolak sampai aturannya dibuat (F3, M1.5.3, M1.9) |
+| `platform_admin` | Di panel admin: Gate/policy dengan model `PlatformAdmin` (misal `TenantPolicy`). Saat impersonasi (M1.9): Gate/policy dengan akun owner yang dimasuki, sementara audit log mencatat super admin dan `impersonation_log_id` |
+| `agent`, `resident` | Ditolak sampai aturannya dibuat (F3, M1.5.3) |
 
 ## Konsekuensi
 
 - Arch test menjaga Action tetap `final`, meng-extend base class, dan punya `handle()`. Pemanggilan `authorize()` dan `transaction()` belum bisa dijaga otomatis; dicek saat review.
 - `SyncTenantRoles` sengaja tidak memanggil `authorize()`: ia provisioning internal yang hanya dipanggil listener `TenantCreated` dan command `access:sync-roles`.
 - Command dan job terjadwal yang memanggil Action harus membungkusnya dengan `actingAs(Actor::system(), ...)`.
+- Halaman publik yang membuat data juga berjalan sebagai `system`, dengan Action sebagai satu-satunya gerbang: registrasi mandiri (`RegisterTenant`) memvalidasi seluruh input, dan penerimaan undangan staf (`AcceptStaffInvitation`) dijaga oleh token undangan.
+- `EndImpersonation` tidak memakai `authorize()`: selama impersonasi Gate hanya melihat akun owner, jadi Action membandingkan aktor dengan super admin pembuka sesi secara langsung.

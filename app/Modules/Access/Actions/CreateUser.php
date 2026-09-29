@@ -9,7 +9,9 @@ use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 /**
- * Adds a staff member with one role to the current tenant.
+ * Adds a staff member with one role to the current tenant. Accounts made by
+ * an owner, an invitation, or an operator count as verified; only
+ * self-registration asks the owner to confirm the email address first.
  */
 final class CreateUser extends Action
 {
@@ -26,10 +28,13 @@ final class CreateUser extends Action
             'phone' => ['nullable', 'string', 'regex:/^\+[1-9]\d{7,14}$/'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', Rule::enum(Role::class)->only(Role::staff())],
+            'email_verified' => ['sometimes', 'boolean'],
         ]);
 
         return $this->transaction(function () use ($data): User {
-            $user = User::create(Arr::except($data, 'role'));
+            $user = new User(Arr::except($data, ['role', 'email_verified']));
+            $user->email_verified_at = ($data['email_verified'] ?? true) ? now() : null;
+            $user->save();
 
             $user->assignRole($data['role']);
 

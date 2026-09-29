@@ -2,8 +2,10 @@
 
 namespace App\Modules\Property;
 
+use App\Modules\Access\Events\StaffInvitationAccepted;
 use App\Modules\Access\Permissions\PermissionRegistry;
 use App\Modules\Property\Enums\PropertyPermission;
+use App\Modules\Property\Listeners\AssignInvitedStaff;
 use App\Modules\Property\Models\Property;
 use App\Modules\Property\Models\PropertySetting;
 use App\Modules\Property\Models\PropertyUser;
@@ -12,6 +14,7 @@ use App\Modules\Property\Models\RoomPrice;
 use App\Modules\Property\Models\RoomType;
 use App\Support\Modules\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Event;
 
 class PropertyServiceProvider extends ModuleServiceProvider
 {
@@ -35,5 +38,7 @@ class PropertyServiceProvider extends ModuleServiceProvider
             'room' => Room::class,
             'room_price' => RoomPrice::class,
         ]);
+
+        Event::listen(StaffInvitationAccepted::class, AssignInvitedStaff::class);
     }
 }

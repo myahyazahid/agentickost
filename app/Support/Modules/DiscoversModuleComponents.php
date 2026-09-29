@@ -6,7 +6,8 @@ use Filament\Panel;
 
 /**
  * Lets a Filament panel pick up resources, pages, and widgets from
- * app/Modules/{Name}/Filament/{PanelDirectory}.
+ * app/Modules/{Name}/Filament/{PanelDirectory}, and public panel routes
+ * (such as an invitation link) from routes.php in that directory.
  */
 trait DiscoversModuleComponents
 {
@@ -20,6 +21,10 @@ trait DiscoversModuleComponents
                 ->discoverResources(in: "{$directory}/Resources", for: "{$namespace}\\Resources")
                 ->discoverPages(in: "{$directory}/Pages", for: "{$namespace}\\Pages")
                 ->discoverWidgets(in: "{$directory}/Widgets", for: "{$namespace}\\Widgets");
+
+            if (is_file("{$directory}/routes.php")) {
+                $panel->routes(fn () => require "{$directory}/routes.php");
+            }
         }
 
         return $panel;

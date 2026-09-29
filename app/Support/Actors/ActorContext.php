@@ -72,7 +72,9 @@ final class ActorContext
 
     /**
      * The system actor passes only when it was set explicitly, so an
-     * unauthenticated request never falls through to system privileges.
+     * unauthenticated request never falls through to system privileges. A
+     * super admin is checked against its own policies, or while
+     * impersonating, against those of the owner account it entered with.
      *
      * @throws AuthorizationException
      */
@@ -84,6 +86,16 @@ final class ActorContext
             if ($this->actor === null) {
                 throw new AuthorizationException('Aksi ini membutuhkan pengguna yang login.');
             }
+
+            return;
+        }
+
+        if ($actor->type === ActorType::PlatformAdmin) {
+            if ($actor->user === null) {
+                throw new AuthorizationException('Sesi super admin tidak ditemukan.');
+            }
+
+            Gate::forUser($actor->user)->authorize($ability, $arguments);
 
             return;
         }

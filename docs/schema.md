@@ -146,8 +146,9 @@ Tabel di bagian ini **bukan** tabel tenant, kecuali ditandai 🏠.
 | `logo_path` | `VARCHAR(255)` NULL | Branding (FR-SUB-07) |
 | `brand_color` | `VARCHAR(7)` NULL | Warna aksen hex |
 | `default_timezone` | `VARCHAR(40)` | Default `Asia/Jakarta` |
-| `trial_ends_at` | `TIMESTAMP` NULL | |
+| `trial_ends_at` | `TIMESTAMP` NULL | Diisi saat tenant dibuat dari `platform_settings.trial_days` (FR-TNT-03); NULL = tanpa trial |
 | `frozen_at` | `TIMESTAMP` NULL | Diisi saat dibekukan (FR-TNT-06) |
+| `frozen_reason` | `TEXT` NULL | Alasan dari super admin; dikosongkan saat diaktifkan lagi |
 | `settings` | `JSON` | Pengaturan tingkat tenant yang jarang dicari |
 
 Indeks: `UNIQUE(slug)`.
@@ -211,12 +212,26 @@ Indeks: `UNIQUE(tenant_id)` — satu langganan aktif per tenant.
 |---|---|---|
 | `platform_admin_id` | `CHAR(26)` | FK |
 | `tenant_id` | `CHAR(26)` | FK |
+| `impersonated_user_id` | `CHAR(26)` NULL | FK `users`; akun owner yang dipakai selama sesi |
 | `reason` | `TEXT` | Wajib (FR-TNT-05) |
 | `started_at` | `TIMESTAMP` | |
 | `ended_at` | `TIMESTAMP` NULL | |
 | `ip_address` | `VARCHAR(45)` | |
 
-Tidak memiliki `updated_at` selain untuk mengisi `ended_at`.
+Tidak memiliki `updated_at` selain untuk mengisi `ended_at`. Indeks: `INDEX(tenant_id, started_at)` untuk daftar sesi yang dilihat owner.
+
+Selama sesi, super admin tetap login di guard `platform` dan login di guard `web` sebagai owner. Aksi tercatat di audit log dengan `actor_type = platform_admin` dan `impersonation_log_id` sesi ini. Awal dan akhir sesi juga dicatat di audit log tenant (`impersonation.started`, `impersonation.ended`).
+
+### 3.6a `platform_settings` — P0
+
+Pengaturan tingkat platform yang diubah super admin. Bukan tabel tenant.
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `key` | `VARCHAR(80)` | Unik. Contoh: `trial_days` |
+| `value` | `JSON` | |
+
+Bila `trial_days` belum diisi, dipakai `config('kostpilot.trial_days')` (default 14).
 
 ### 3.7 `document_sequences` 🏠 — P0
 
@@ -245,6 +260,7 @@ Staf dan owner. Penghuni **tidak** disimpan di sini (lihat §6.1).
 | `name` | `VARCHAR(100)` | |
 | `email` | `VARCHAR(150)` | Unik global; satu user terikat ke satu tenant |
 | `phone` | `VARCHAR(20)` NULL | E.164 |
+| `email_verified_at` | `TIMESTAMP` NULL | NULL hanya untuk owner yang mendaftar sendiri dan belum membuka tautan verifikasi (FR-TNT-01); akun dari operator atau undangan langsung terverifikasi |
 | `password` | `VARCHAR(255)` | Hash |
 | `two_factor_secret` 🔒 | `TEXT` NULL | |
 | `two_factor_confirmed_at` | `TIMESTAMP` NULL | |
@@ -257,6 +273,25 @@ Indeks: `UNIQUE(email)`, `INDEX(tenant_id, is_active)`.
 ### 4.2 Role & permission — P0
 
 Memakai tabel bawaan `spatie/laravel-permission` dengan fitur **teams**, di mana `team_id` = `tenant_id`. Peran bawaan dibuat per tenant saat registrasi. Tabel: `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`.
+
+### 4.2a `staff_invitations` 🏠 — P0
+
+Undangan staf lewat email (FR-USR-03). Akun dibuat saat undangan diterima.
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| `name` | `VARCHAR(100)` | |
+| `email` | `VARCHAR(150)` | |
+| `role` | `VARCHAR(32)` | `owner`, `manager`, `caretaker`, `accountant` |
+| `property_ids` | `JSON` | Properti yang ditugaskan saat diterima |
+| `token_hash` | `CHAR(64)` | SHA-256 token tautan; unik. Token mentah hanya ada di email |
+| `expires_at` | `TIMESTAMP` | 7 hari sejak dikirim; kirim ulang memberi token dan batas baru |
+| `accepted_at` | `TIMESTAMP` NULL | |
+| `cancelled_at` | `TIMESTAMP` NULL | |
+| `user_id` | `CHAR(26)` NULL | FK `users`; akun yang terbentuk |
+| `invited_by` | `CHAR(26)` NULL | FK `users` |
+
+Indeks: `UNIQUE(token_hash)`, `INDEX(tenant_id, email)`. Satu email hanya boleh punya satu undangan terbuka per tenant.
 
 ### 4.3 `property_user` 🏠 — P0
 
@@ -1412,6 +1447,7 @@ Urutan mengikuti dependensi foreign key dan milestone roadmap.
 | 9 | `room_moves`, `inspections`, `inspection_items`, `settlements` | M1.6 |
 | 10 | `tickets`, `ticket_updates` | M1.7 |
 | 11 | `opening_balances`, `opening_balance_lines` | M1.8 |
+| 11a | `platform_settings`, `staff_invitations`, kolom `users.email_verified_at`, `tenants.frozen_reason`, `impersonation_logs.impersonated_user_id` | M1.9 |
 | 12 | `plans`, `subscriptions`, `subscription_invoices`, `usage_counters` | M1.5.1 |
 | 13 | `gateway_credentials`, `gateway_payment_requests`, `gateway_webhook_logs` | M1.5.2 |
 | 14 | `otp_codes` | M1.5.3 |

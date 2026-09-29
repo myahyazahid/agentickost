@@ -231,15 +231,15 @@ Milestone paling berisiko. Kerjakan dengan test lebih dulu.
 
 
 
-
-- [ ] Dashboard: okupansi, pendapatan bulan berjalan, tunggakan, tiket terbuka, pembayaran menunggu (FR-RPT-01)
-- [ ] Daftar tunggakan per penghuni (FR-RPT-02)
-- [ ] Registrasi mandiri dan verifikasi akun (FR-TNT-01, FR-TNT-02)
-- [ ] Masa trial (FR-TNT-03)
-- [ ] Panel super admin: daftar tenant dan status (FR-TNT-04)
-- [ ] Impersonasi dengan alasan dan audit (FR-TNT-05)
-- [ ] Bekukan dan aktifkan tenant (FR-TNT-06)
-- [ ] Undang staf lewat email (FR-USR-03)
+### M1.9 Dashboard & Registrasi — RPT (P0), TNT
+- [x] Dashboard: okupansi, pendapatan bulan berjalan, tunggakan, tiket terbuka, pembayaran menunggu (FR-RPT-01): pendapatan dari buku besar, uang yang diterima ditampilkan di bawahnya; setiap angka hanya tampil untuk peran yang berhak
+- [x] Daftar tunggakan per penghuni (FR-RPT-02): satu baris per kontrak, lengkap dengan pembayar yang ditagih
+- [x] Registrasi mandiri dan verifikasi akun (FR-TNT-01, FR-TNT-02): verifikasi lewat email; nomor WhatsApp disimpan, verifikasinya menunggu integrasi WhatsApp (M1.5.4)
+- [x] Masa trial (FR-TNT-03): lama trial diatur super admin, akhir trial per tenant bisa diubah; yang terjadi setelah trial berakhir menunggu langganan (M1.5.1)
+- [x] Panel super admin: daftar tenant dan status (FR-TNT-04), dengan penggunaan: properti, kamar, kontrak berjalan, pengguna aktif
+- [x] Impersonasi dengan alasan dan audit (FR-TNT-05): owner melihat daftar sesi di menu Akses tim KostPilot
+- [x] Bekukan dan aktifkan tenant (FR-TNT-06)
+- [x] Undang staf lewat email (FR-USR-03): undangan lewat WhatsApp menunggu M1.5.4
 
 **Kriteria selesai:** tenant baru dapat mendaftar sendiri sampai melihat dashboard; super admin dapat mengelola tenant.
 
@@ -482,5 +482,7 @@ Ide dan permintaan di luar roadmap. Ditinjau di akhir setiap fase.
 
 | Tanggal | Ide / permintaan | Sumber | Keputusan |
 |---|---|---|---|
+| 29 Sep 2026 | Waktu (jam) di halaman panel yang sudah ada masih tampil dalam UTC; set zona waktu tampilan Filament mengikuti tenant (NFR-LOC-02). Halaman baru M1.9 sudah memakai zona waktu tenant | Ditemukan saat M1.9 | Belum diputuskan |
+| 29 Sep 2026 | Nonaktifkan staf dan ubah peran staf dari halaman Staf; sekarang halaman itu hanya menampilkan staf dan mengundang | Ditemukan saat M1.9 | Belum diputuskan |
 | 28 Sep 2026 | Opsi "kontrak yang sudah berjalan" di formulir kontrak, supaya kost kecil bisa memasukkan kontrak lama tanpa berkas impor; sekarang kontrak berjalan hanya masuk lewat Impor data | Ditemukan saat M1.8 | Belum diputuskan |
 | 28 Sep 2026 | Terjemahan bahasa Indonesia untuk pesan validasi bawaan Laravel (`lang/id`); sekarang pesan seperti "The moved on field must be a date after ..." masih berbahasa Inggris (NFR-LOC-01) | Ditemukan saat M1.6 | Belum diputuskan |

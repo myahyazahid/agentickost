@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Modules\Access\Filament\App\Auth\Register;
 use App\Modules\Access\Http\Middleware\SetTenantContext;
 use App\Support\Filament\PanelTheme;
 use App\Support\Modules\DiscoversModuleComponents;
@@ -13,7 +14,6 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -35,6 +35,9 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('app')
             ->login()
+            ->registration(Register::class)
+            ->emailVerification()
+            ->passwordReset()
             ->databaseNotifications()
             // Daily work first, setup last.
             ->navigationGroups(['Penghuni', 'Tagihan', 'Pembayaran', 'Maintenance', 'Keuangan', 'Properti'])
@@ -46,7 +49,6 @@ class AppPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/App/Widgets'), for: 'App\Filament\App\Widgets')
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

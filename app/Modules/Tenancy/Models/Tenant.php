@@ -3,6 +3,7 @@
 namespace App\Modules\Tenancy\Models;
 
 use App\Modules\Tenancy\Database\Factories\TenantFactory;
+use App\Modules\Tenancy\Enums\TenantStatus;
 use App\Modules\Tenancy\Events\TenantCreated;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -22,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string $default_timezone
  * @property Carbon|null $trial_ends_at
  * @property Carbon|null $frozen_at
+ * @property string|null $frozen_reason
+ * @property Carbon $created_at
  * @property array<string, mixed> $settings
  */
 #[Fillable(['name', 'slug', 'logo_path', 'brand_color', 'default_timezone', 'trial_ends_at', 'settings'])]
@@ -49,6 +53,36 @@ class Tenant extends Model
     public function isFrozen(): bool
     {
         return $this->frozen_at !== null;
+    }
+
+    public function status(): TenantStatus
+    {
+        return match (true) {
+            $this->isFrozen() => TenantStatus::Frozen,
+            $this->trial_ends_at === null => TenantStatus::Active,
+            $this->trial_ends_at->isFuture() => TenantStatus::Trial,
+            default => TenantStatus::TrialEnded,
+        };
+    }
+
+    /**
+     * Days of trial left, counting today; null outside a running trial.
+     */
+    public function trialDaysLeft(): ?int
+    {
+        if ($this->status() !== TenantStatus::Trial || $this->trial_ends_at === null) {
+            return null;
+        }
+
+        return (int) ceil(now()->diffInDays($this->trial_ends_at, absolute: true));
+    }
+
+    /**
+     * @return HasMany<ImpersonationLog, $this>
+     */
+    public function impersonationLogs(): HasMany
+    {
+        return $this->hasMany(ImpersonationLog::class);
     }
 
     /**

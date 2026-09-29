@@ -3,14 +3,16 @@
 namespace App\Modules\Tenancy\Actions;
 
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\PlatformSettings;
 use App\Support\Actions\Action;
 use App\Support\Timezone;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * Creates a tenant. Listeners of TenantCreated (such as role provisioning)
- * run inside the same transaction.
+ * Creates a tenant with a trial of the length the super admin set
+ * (FR-TNT-03). Listeners of TenantCreated (such as role provisioning) run
+ * inside the same transaction.
  */
 final class CreateTenant extends Action
 {
@@ -31,6 +33,7 @@ final class CreateTenant extends Action
             'name' => $data['name'],
             'slug' => $data['slug'] ?? $this->uniqueSlug($data['name']),
             'default_timezone' => $data['default_timezone'] ?? Timezone::Wib->value,
+            'trial_ends_at' => now()->addDays(PlatformSettings::trialDays()),
         ]));
     }
 

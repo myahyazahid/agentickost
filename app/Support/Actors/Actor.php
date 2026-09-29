@@ -28,6 +28,24 @@ final readonly class Actor
         return new self(ActorType::User, (string) $user->getAuthIdentifier(), $ipAddress, user: $user);
     }
 
+    /**
+     * A super admin in the admin panel, authorized as the admin.
+     */
+    public static function platformAdmin(Authenticatable $admin, ?string $ipAddress = null): self
+    {
+        return new self(ActorType::PlatformAdmin, (string) $admin->getAuthIdentifier(), $ipAddress, user: $admin);
+    }
+
+    /**
+     * A super admin working inside a tenant (FR-TNT-05). The audit log names
+     * the admin and the session; permissions are those of the owner account
+     * the admin entered with.
+     */
+    public static function impersonating(Authenticatable $admin, Authenticatable $user, string $impersonationLogId, ?string $ipAddress = null): self
+    {
+        return new self(ActorType::PlatformAdmin, (string) $admin->getAuthIdentifier(), $ipAddress, $impersonationLogId, $user);
+    }
+
     public static function agent(string $agentId): self
     {
         return new self(ActorType::Agent, $agentId);

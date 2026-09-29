@@ -6,9 +6,14 @@ use App\Modules\Access\Concerns\Auditable;
 use App\Modules\Access\Database\Factories\UserFactory;
 use App\Modules\Access\Enums\Role;
 use App\Modules\Tenancy\Concerns\BelongsToTenant;
+use App\Modules\Tenancy\Models\Tenant;
+use Filament\Auth\Notifications\VerifyEmail;
+use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -29,16 +34,17 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $name
  * @property string $email
  * @property string|null $phone
+ * @property Carbon|null $email_verified_at
  * @property bool $is_active
  * @property Carbon|null $last_login_at
  */
 #[Fillable(['name', 'email', 'phone', 'password', 'is_active'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret'])]
 #[UseFactory(UserFactory::class)]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
-    use Auditable, BelongsToTenant, HasFactory, HasRoles, HasUlids, Notifiable, SoftDeletes;
+    use Auditable, BelongsToTenant, HasFactory, HasRoles, HasUlids, MustVerifyEmail, Notifiable, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -59,9 +65,27 @@ class User extends Authenticatable implements FilamentUser
         return $user instanceof self ? $user : throw new AuthenticationException;
     }
 
+    /**
+     * Staff of a frozen tenant are locked out (FR-TNT-06).
+     */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $panel->getId() === 'app' && $this->is_active;
+        return $panel->getId() === 'app'
+            && $this->is_active
+            && Tenant::query()->whereKey($this->tenant_id)->active()->exists();
+    }
+
+    /**
+     * Sends the app panel's verification link, the same one Filament's
+     * registration and resend buttons send, rather than Laravel's default
+     * link to a route this app does not have.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $notification = app(VerifyEmail::class);
+        $notification->url = Filament::getPanel('app')->getVerifyEmailUrl($this);
+
+        $this->notify($notification);
     }
 
     /**
@@ -83,6 +107,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'email_verified_at' => 'datetime',
             'two_factor_secret' => 'encrypted',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Modules\Tenancy\Http\Middleware\SetPlatformActor;
 use App\Support\Filament\PanelTheme;
 use App\Support\Modules\DiscoversModuleComponents;
 use Filament\Http\Middleware\Authenticate;
@@ -56,9 +57,11 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            // Persistent so Livewire requests from the panel also act as the admin.
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+                SetPlatformActor::class,
+            ], isPersistent: true);
 
         return $this->discoverModuleComponents($panel, 'Admin');
     }

@@ -16,4 +16,16 @@ return [
 
     'identity_hash_key' => env('IDENTITY_HASH_KEY'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Trial Length
+    |--------------------------------------------------------------------------
+    |
+    | Days of trial a newly registered tenant gets (FR-TNT-03) until a super
+    | admin sets another length in the admin panel.
+    |
+    */
+
+    'trial_days' => (int) env('KOSTPILOT_TRIAL_DAYS', 14),
+
 ];
